@@ -5,8 +5,8 @@ gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 400, 0, 300)
-mainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
+mainFrame.Size = UDim2.new(0, 400, 0, 290)
+mainFrame.Position = UDim2.new(0.5, -200, 0.5, -145)
 mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 mainFrame.ClipsDescendants = true
 
@@ -84,7 +84,7 @@ warningText.TextWrapped = true
 warningText.TextXAlignment = Enum.TextXAlignment.Left
 warningText.TextYAlignment = Enum.TextYAlignment.Top
 warningText.BackgroundTransparency = 1
-warningText.Size = UDim2.new(1, 0, 0, 145)
+warningText.Size = UDim2.new(1, 0, 0, 140)
 warningText.Position = UDim2.new(0, 0, 0, 35)
 
 local activateButton = Instance.new("TextButton")
@@ -95,7 +95,7 @@ activateButton.TextSize = 18
 activateButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 activateButton.BackgroundColor3 = Color3.fromRGB(60, 180, 80)
 activateButton.Size = UDim2.new(0, 140, 0, 40)
-activateButton.Position = UDim2.new(0.5, -70, 0, 190)
+activateButton.Position = UDim2.new(0.5, -70, 0, 185)
 activateButton.AutoButtonColor = false
 
 local buttonCorner = Instance.new("UICorner")
@@ -151,9 +151,22 @@ userInput.InputChanged:Connect(function(input)
     end
 end)
 
-closeButton.MouseButton1Click:Connect(function()
+local function closeGUI()
+    local fadeTween = tweenService:Create(mainFrame, TweenInfo.new(0.5), {
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0.5, -200, 0.5, 0)
+    })
+    fadeTween:Play()
+    
+    tweenService:Create(mainBorder, TweenInfo.new(0.5), {
+        Transparency = 1
+    }):Play()
+    
+    fadeTween.Completed:Wait()
     gui:Destroy()
-end)
+end
+
+closeButton.MouseButton1Click:closeGUI)
 
 closeButton.MouseEnter:Connect(function()
     closeButton.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
@@ -181,13 +194,19 @@ local countdownText = Instance.new("TextLabel")
 countdownText.Name = "CountdownText"
 countdownText.Text = tostring(countdown)
 countdownText.Font = Enum.Font.GothamBold
-countdownText.TextSize = 18
+countdownText.TextSize = 22
 countdownText.TextTransparency = 0
 countdownText.BackgroundTransparency = 1
-countdownText.TextColor3 = Color3.fromRGB(255, 255, 255)
+countdownText.TextColor3 = Color3.fromRGB(255, 255, 0)
 countdownText.Size = UDim2.new(1, 0, 1, 0)
 countdownText.Position = UDim2.new(0, 0, 0, 0)
+countdownText.ZIndex = 2
 countdownText.Parent = activateButton
+
+local countdownStroke = Instance.new("UIStroke")
+countdownStroke.Color = Color3.fromRGB(0, 0, 0)
+countdownStroke.Thickness = 2
+countdownStroke.Parent = countdownText
 
 local countdownConnection
 countdownConnection = game:GetService("RunService").Heartbeat:Connect(function()
@@ -227,7 +246,7 @@ activateButton.MouseButton1Click:Connect(function()
             
             if activationTimer >= 3 then
                 activationConnection:Disconnect()
-                gui:Destroy()
+                closeGUI()
             end
         end)
     end
