@@ -1,0 +1,174 @@
+local gui = Instance.new("ScreenGui")
+gui.Name = "PocariGUI"
+gui.ResetOnSpawn = false
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 320, 0, 240)
+mainFrame.Position = UDim2.new(0.5, -160, 0.5, -120)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.ClipsDescendants = true
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 8)
+mainCorner.Parent = mainFrame
+
+local mainBorder = Instance.new("UIStroke")
+mainBorder.Color = Color3.fromRGB(230, 230, 230)
+mainBorder.Thickness = 3
+mainBorder.Parent = mainFrame
+
+local titleBar = Instance.new("Frame")
+titleBar.Name = "TitleBar"
+titleBar.Size = UDim2.new(1, 0, 0, 32)
+titleBar.Position = UDim2.new(0, 0, 0, 0)
+titleBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+titleBar.ClipsDescendants = true
+
+local titleBarCorner = Instance.new("UICorner")
+titleBarCorner.CornerRadius = UDim.new(0, 8)
+titleBarCorner.Parent = titleBar
+
+local title = Instance.new("TextLabel")
+title.Name = "Title"
+title.Text = "CONTROL PANEL"
+title.Font = Enum.Font.FredokaOne
+title.TextSize = 16
+title.TextColor3 = Color3.fromRGB(230, 230, 230)
+title.BackgroundTransparency = 1
+title.Size = UDim2.new(0, 200, 1, 0)
+title.Position = UDim2.new(0, 12, 0, 0)
+title.TextXAlignment = Enum.TextXAlignment.Left
+
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Text = "×"
+closeButton.Font = Enum.Font.GothamSemibold
+closeButton.TextSize = 22
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+closeButton.Size = UDim2.new(0, 28, 0, 28)
+closeButton.Position = UDim2.new(1, -32, 0, 2)
+closeButton.BorderSizePixel = 0
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 6)
+closeCorner.Parent = closeButton
+
+local minimizeButton = Instance.new("TextButton")
+minimizeButton.Name = "MinimizeButton"
+minimizeButton.Text = "-"
+minimizeButton.Font = Enum.Font.GothamSemibold
+minimizeButton.TextSize = 22
+minimizeButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+minimizeButton.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+minimizeButton.Size = UDim2.new(0, 28, 0, 28)
+minimizeButton.Position = UDim2.new(1, -64, 0, 2)
+minimizeButton.BorderSizePixel = 0
+
+local minCorner = Instance.new("UICorner")
+minCorner.CornerRadius = UDim.new(0, 6)
+minCorner.Parent = minimizeButton
+
+local contentFrame = Instance.new("Frame")
+contentFrame.Name = "ContentFrame"
+contentFrame.BackgroundTransparency = 1
+contentFrame.Size = UDim2.new(1, -16, 1, -60)
+contentFrame.Position = UDim2.new(0, 8, 0, 40)
+
+local watermark = Instance.new("TextLabel")
+watermark.Name = "Watermark"
+watermark.Text = "made by pocari"
+watermark.Font = Enum.Font.GothamSemibold
+watermark.TextSize = 10
+watermark.TextColor3 = Color3.fromRGB(150, 150, 150)
+watermark.BackgroundTransparency = 1
+watermark.Size = UDim2.new(1, 0, 0, 16)
+watermark.Position = UDim2.new(0, 0, 1, -16)
+watermark.TextYAlignment = Enum.TextYAlignment.Top
+
+local userInput = game:GetService("UserInputService")
+local tweenService = game:GetService("TweenService")
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+titleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+titleBar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+userInput.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+minimizeButton.MouseButton1Click:Connect(function()
+    if minimizeButton.Text == "-" then
+        contentFrame.Visible = false
+        watermark.Visible = false
+        mainFrame.Size = UDim2.new(mainFrame.Size.X.Scale, mainFrame.Size.X.Offset, 0, 32)
+        minimizeButton.Text = "+"
+        titleBarCorner.CornerRadius = UDim.new(0, 8)
+    else
+        contentFrame.Visible = true
+        watermark.Visible = true
+        mainFrame.Size = UDim2.new(0, 320, 0, 240)
+        minimizeButton.Text = "-"
+        titleBarCorner.CornerRadius = UDim.new(0, 8)
+    end
+end)
+
+closeButton.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
+
+minimizeButton.MouseEnter:Connect(function()
+    minimizeButton.BackgroundColor3 = Color3.fromRGB(230, 230, 230)
+end)
+
+minimizeButton.MouseLeave:Connect(function()
+    minimizeButton.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+end)
+
+closeButton.MouseEnter:Connect(function()
+    closeButton.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
+end)
+
+closeButton.MouseLeave:Connect(function()
+    closeButton.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+end)
+
+local pulseTween = tweenService:Create(
+    mainBorder,
+    TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+    {Color = Color3.fromRGB(255, 255, 255)}
+)
+pulseTween:Play()
+
+watermark.Parent = mainFrame
+contentFrame.Parent = mainFrame
+minimizeButton.Parent = titleBar
+closeButton.Parent = titleBar
+title.Parent = titleBar
+titleBar.Parent = mainFrame
+mainFrame.Parent = gui
+gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
