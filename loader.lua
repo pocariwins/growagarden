@@ -77,6 +77,11 @@ layout.Parent = contentFrame
 layout.Padding = UDim.new(0, 10)
 layout.SortOrder = Enum.SortOrder.LayoutOrder
 
+-- FIX: This ensures UIListLayout calculates sizes properly
+layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    contentFrame.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y)
+end)
+
 local padding = Instance.new("UIPadding")
 padding.Parent = contentFrame
 padding.PaddingLeft = UDim.new(0, 5)
@@ -128,9 +133,7 @@ activateButton.Font = Enum.Font.FredokaOne
 activateButton.TextSize = 18
 activateButton.TextColor3 = Color3.fromRGB(150, 150, 150)
 activateButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-activateButton.Size = UDim2.new(0.8, 0, 0, 40)
-activateButton.Position = UDim2.new(0.5, 0, 0, 0)
-activateButton.AnchorPoint = Vector2.new(0.5, 0)
+activateButton.Size = UDim2.new(1, 0, 0, 40)  -- FIX: Changed to full width
 activateButton.AutoButtonColor = false
 activateButton.Active = false
 activateButton.LayoutOrder = 4
@@ -210,6 +213,9 @@ activateButton.MouseLeave:Connect(function()
         activateButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     end
 end)
+
+-- FIX: Added this to ensure UI elements render before countdown starts
+task.wait(0.1)
 
 -- Start countdown after GUI is fully created
 local function startCountdown()
