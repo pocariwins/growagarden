@@ -135,7 +135,6 @@ buttonStroke.Color = Color3.fromRGB(70, 70, 70)
 buttonStroke.Thickness = 2
 buttonStroke.Parent = activateButton
 
--- First, parent all UI elements
 warningTitle.Parent = contentFrame
 description.Parent = contentFrame
 timerText.Parent = contentFrame
@@ -147,7 +146,6 @@ titleBar.Parent = mainFrame
 mainFrame.Parent = gui
 gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
--- Now set up functionality
 local userInput = game:GetService("UserInputService")
 local tweenService = game:GetService("TweenService")
 local dragging
@@ -214,20 +212,18 @@ activateButton.MouseLeave:Connect(function()
     end
 end)
 
--- Start the countdown in a separate thread AFTER the GUI is displayed
-coroutine.wrap(function()
+task.spawn(function()
     local seconds = 7
     for i = seconds, 1, -1 do
         timerText.Text = "Activation available in: " .. i .. " seconds"
-        wait(1)
+        task.wait(1)
     end
     
     timerText.Text = "Activation available now!"
     timerText.TextColor3 = Color3.fromRGB(0, 200, 0)
     
-    -- Enable the button
     activateButton.Active = true
     activateButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     activateButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     buttonStroke.Color = Color3.fromRGB(100, 100, 100)
-end)()
+end)
