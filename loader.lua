@@ -5,8 +5,8 @@ gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 400, 0, 360)
-mainFrame.Position = UDim2.new(0.5, -200, 0.5, -180)
+mainFrame.Size = UDim2.new(0, 400, 0, 320)
+mainFrame.Position = UDim2.new(0.5, -200, 0.5, -160)
 mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 mainFrame.ClipsDescendants = true
 
@@ -71,7 +71,7 @@ header.TextColor3 = Color3.fromRGB(255, 100, 100)
 header.TextWrapped = true
 header.BackgroundTransparency = 1
 header.Size = UDim2.new(1, 0, 0, 40)
-header.Position = UDim2.new(0, 0, 0, 10)
+header.Position = UDim2.new(0, 0, 0, 0)
 header.TextXAlignment = Enum.TextXAlignment.Center
 
 local warningText = Instance.new("TextLabel")
@@ -84,8 +84,8 @@ warningText.TextWrapped = true
 warningText.TextXAlignment = Enum.TextXAlignment.Left
 warningText.TextYAlignment = Enum.TextYAlignment.Top
 warningText.BackgroundTransparency = 1
-warningText.Size = UDim2.new(1, 0, 0, 180)
-warningText.Position = UDim2.new(0, 0, 0, 60)
+warningText.Size = UDim2.new(1, 0, 0, 150)
+warningText.Position = UDim2.new(0, 0, 0, 45)
 
 local activateButton = Instance.new("TextButton")
 activateButton.Name = "ActivateButton"
@@ -95,7 +95,7 @@ activateButton.TextSize = 18
 activateButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 activateButton.BackgroundColor3 = Color3.fromRGB(60, 180, 80)
 activateButton.Size = UDim2.new(0, 140, 0, 40)
-activateButton.Position = UDim2.new(0.5, -70, 1, -60)
+activateButton.Position = UDim2.new(0.5, -70, 0, 210)
 activateButton.AutoButtonColor = false
 
 local buttonCorner = Instance.new("UICorner")
@@ -170,34 +170,67 @@ local pulseTween = tweenService:Create(
 )
 pulseTween:Play()
 
+activateButton.AutoButtonColor = false
 activateButton.Active = false
 activateButton.TextTransparency = 0.5
 activateButton.BackgroundTransparency = 0.5
 buttonStroke.Transparency = 0.5
 
 local countdown = 7
-local countdownText = activateButton:Clone()
+local countdownText = Instance.new("TextLabel")
 countdownText.Name = "CountdownText"
 countdownText.Text = tostring(countdown)
+countdownText.Font = Enum.Font.GothamBold
+countdownText.TextSize = 18
 countdownText.TextTransparency = 0
 countdownText.BackgroundTransparency = 1
 countdownText.TextColor3 = Color3.fromRGB(255, 255, 255)
 countdownText.Size = UDim2.new(1, 0, 1, 0)
 countdownText.Position = UDim2.new(0, 0, 0, 0)
-countdownText.UIStroke:Destroy()
 countdownText.Parent = activateButton
 
-delay(7, function()
-    while countdown > 0 do
-        countdown = countdown - 1
-        countdownText.Text = tostring(countdown)
-        wait(1)
+local countdownConnection
+countdownConnection = game:GetService("RunService").Heartbeat:Connect(function()
+    countdown = countdown - 0.01667
+    if countdown <= 0 then
+        countdownConnection:Disconnect()
+        countdownText:Destroy()
+        activateButton.Active = true
+        activateButton.TextTransparency = 0
+        activateButton.BackgroundTransparency = 0
+        buttonStroke.Transparency = 0
+    else
+        countdownText.Text = tostring(math.ceil(countdown))
     end
-    countdownText:Destroy()
-    activateButton.Active = true
-    activateButton.TextTransparency = 0
-    activateButton.BackgroundTransparency = 0
-    buttonStroke.Transparency = 0
+end)
+
+activateButton.MouseButton1Click:Connect(function()
+    if activateButton.Active then
+        activateButton.Active = false
+        activateButton.Text = "ACTIVATING..."
+        activateButton.BackgroundColor3 = Color3.fromRGB(50, 100, 150)
+        buttonStroke.Color = Color3.fromRGB(100, 180, 255)
+        
+        local dots = 0
+        local maxDots = 3
+        local activationTimer = 0
+        
+        local activationConnection
+        activationConnection = game:GetService("RunService").Heartbeat:Connect(function(dt)
+            activationTimer = activationTimer + dt
+            if activationTimer >= 0.5 then
+                activationTimer = 0
+                dots = (dots + 1) % (maxDots + 1)
+                local dotText = string.rep(".", dots)
+                activateButton.Text = "ACTIVATING" .. dotText
+            end
+            
+            if activationTimer >= 3 then
+                activationConnection:Disconnect()
+                gui:Destroy()
+            end
+        end)
+    end
 end)
 
 activateButton.MouseEnter:Connect(function()
