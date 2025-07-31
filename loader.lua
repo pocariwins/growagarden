@@ -5,8 +5,8 @@ gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 400, 0, 320)
-mainFrame.Position = UDim2.new(0.5, -200, 0.5, -160)
+mainFrame.Size = UDim2.new(0, 400, 0, 300)
+mainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
 mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 mainFrame.ClipsDescendants = true
 
@@ -70,7 +70,7 @@ header.TextSize = 22
 header.TextColor3 = Color3.fromRGB(255, 100, 100)
 header.TextWrapped = true
 header.BackgroundTransparency = 1
-header.Size = UDim2.new(1, 0, 0, 40)
+header.Size = UDim2.new(1, 0, 0, 30)
 header.Position = UDim2.new(0, 0, 0, 0)
 header.TextXAlignment = Enum.TextXAlignment.Center
 
@@ -84,8 +84,8 @@ warningText.TextWrapped = true
 warningText.TextXAlignment = Enum.TextXAlignment.Left
 warningText.TextYAlignment = Enum.TextYAlignment.Top
 warningText.BackgroundTransparency = 1
-warningText.Size = UDim2.new(1, 0, 0, 150)
-warningText.Position = UDim2.new(0, 0, 0, 45)
+warningText.Size = UDim2.new(1, 0, 0, 145)
+warningText.Position = UDim2.new(0, 0, 0, 35)
 
 local activateButton = Instance.new("TextButton")
 activateButton.Name = "ActivateButton"
@@ -95,7 +95,7 @@ activateButton.TextSize = 18
 activateButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 activateButton.BackgroundColor3 = Color3.fromRGB(60, 180, 80)
 activateButton.Size = UDim2.new(0, 140, 0, 40)
-activateButton.Position = UDim2.new(0.5, -70, 0, 210)
+activateButton.Position = UDim2.new(0.5, -70, 0, 190)
 activateButton.AutoButtonColor = false
 
 local buttonCorner = Instance.new("UICorner")
