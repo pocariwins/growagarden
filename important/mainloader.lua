@@ -81,6 +81,7 @@ local function createWindow(title, isMain)
     contentFrame.BackgroundTransparency = 1
     contentFrame.Size = UDim2.new(1, -16, 1, -60)
     contentFrame.Position = UDim2.new(0, 8, 0, 40)
+    contentFrame.ClipsDescendants = true  -- Ensure content is clipped when minimized
 
     local watermark = Instance.new("TextLabel")
     watermark.Name = "Watermark"
@@ -124,6 +125,7 @@ layout.Parent = tabContainer
 
 -- Store tab functions
 local tabFunctions = {}
+local openTabs = {}
 
 -- Create feature tabs
 for i = 1, 8 do
@@ -148,6 +150,7 @@ for i = 1, 8 do
         -- Create new window for this tab
         local tabWindow, tabContentFrame, tabMinimize, tabClose, tabTitleBar, tabBorder, tabWatermark = createWindow(tabButton.Text, false)
         tabWindow.Parent = gui
+        table.insert(openTabs, tabWindow)
         
         -- Create back button
         local backButton = Instance.new("TextButton")
@@ -157,7 +160,7 @@ for i = 1, 8 do
         backButton.TextColor3 = Color3.fromRGB(220, 220, 255)
         backButton.BackgroundColor3 = Color3.fromRGB(65, 70, 90)
         backButton.Size = UDim2.new(0, 80, 0, 28)
-        backButton.Position = UDim2.new(0, 8, 0, 40)
+        backButton.Position = UDim2.new(0, 8, 0, 0)  -- Positioned inside content frame
         backButton.BorderSizePixel = 0
         
         local backCorner = Instance.new("UICorner")
@@ -167,8 +170,8 @@ for i = 1, 8 do
         -- Create content for tab
         local contentLabel = Instance.new("TextLabel")
         contentLabel.Text = "Content for Feature " .. i
-        contentLabel.Size = UDim2.new(1, -16, 1, -100)
-        contentLabel.Position = UDim2.new(0, 8, 0, 80)
+        contentLabel.Size = UDim2.new(1, -16, 1, -40)
+        contentLabel.Position = UDim2.new(0, 0, 0, 40)  -- Positioned below back button
         contentLabel.Font = Enum.Font.Gotham
         contentLabel.TextSize = 16
         contentLabel.TextColor3 = Color3.fromRGB(220, 220, 255)
@@ -176,17 +179,29 @@ for i = 1, 8 do
         contentLabel.TextWrapped = true
         
         -- Add elements to tab window
-        backButton.Parent = tabWindow
+        backButton.Parent = tabContentFrame
         contentLabel.Parent = tabContentFrame
         
         -- Back button functionality
         backButton.MouseButton1Click:Connect(function()
             tabWindow:Destroy()
+            for idx, win in ipairs(openTabs) do
+                if win == tabWindow then
+                    table.remove(openTabs, idx)
+                    break
+                end
+            end
         end)
         
         -- Close button functionality for tab window
         tabClose.MouseButton1Click:Connect(function()
             tabWindow:Destroy()
+            for idx, win in ipairs(openTabs) do
+                if win == tabWindow then
+                    table.remove(openTabs, idx)
+                    break
+                end
+            end
         end)
         
         -- Tab window dragging functionality
@@ -234,13 +249,13 @@ for i = 1, 8 do
             local tweenService = game:GetService("TweenService")
             
             if tabMinimized then
-                tweenService:Create(tabWindow, tweenInfo, {Size = UDim2.new(tabWindow.Size.X.Scale, tabWindow.Size.X.Offset, 0, 32)}):Play()
-                tweenService:Create(tabContentFrame, tweenInfo, {BackgroundTransparency = 1, Size = UDim2.new(1, -16, 0, 0)}):Play()
+                tweenService:Create(tabWindow, tweenInfo, {Size = UDim2.new(0, 320, 0, 32)}):Play()
+                tweenService:Create(tabContentFrame, tweenInfo, {Size = UDim2.new(1, -16, 0, 0)}):Play()
                 tweenService:Create(tabWatermark, tweenInfo, {TextTransparency = 1}):Play()
                 tabMinimize.Text = "+"
             else
                 tweenService:Create(tabWindow, tweenInfo, {Size = UDim2.new(0, 320, 0, 240)}):Play()
-                tweenService:Create(tabContentFrame, tweenInfo, {BackgroundTransparency = 1, Size = UDim2.new(1, -16, 1, -60)}):Play()
+                tweenService:Create(tabContentFrame, tweenInfo, {Size = UDim2.new(1, -16, 1, -60)}):Play()
                 tweenService:Create(tabWatermark, tweenInfo, {TextTransparency = 0}):Play()
                 tabMinimize.Text = "-"
             end
@@ -328,13 +343,13 @@ minimizeButton.MouseButton1Click:Connect(function()
     local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad)
     
     if minimized then
-        tweenService:Create(mainWindow, tweenInfo, {Size = UDim2.new(mainWindow.Size.X.Scale, mainWindow.Size.X.Offset, 0, 32)}):Play()
-        tweenService:Create(mainContent, tweenInfo, {BackgroundTransparency = 1, Size = UDim2.new(1, -16, 0, 0)}):Play()
+        tweenService:Create(mainWindow, tweenInfo, {Size = UDim2.new(0, 320, 0, 32)}):Play()
+        tweenService:Create(mainContent, tweenInfo, {Size = UDim2.new(1, -16, 0, 0)}):Play()
         tweenService:Create(watermark, tweenInfo, {TextTransparency = 1}):Play()
         minimizeButton.Text = "+"
     else
         tweenService:Create(mainWindow, tweenInfo, {Size = UDim2.new(0, 320, 0, 240)}):Play()
-        tweenService:Create(mainContent, tweenInfo, {BackgroundTransparency = 1, Size = UDim2.new(1, -16, 1, -60)}):Play()
+        tweenService:Create(mainContent, tweenInfo, {Size = UDim2.new(1, -16, 1, -60)}):Play()
         tweenService:Create(watermark, tweenInfo, {TextTransparency = 0}):Play()
         minimizeButton.Text = "-"
     end
