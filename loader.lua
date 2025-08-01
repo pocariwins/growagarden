@@ -132,7 +132,7 @@ buttonStroke.Parent = activateButton
 
 local watermark = Instance.new("TextLabel")
 watermark.Name = "Watermark"
-watermark.Text = "pocari ;)"
+watermark.Text = "created by pocari"
 watermark.Font = Enum.Font.FredokaOne
 watermark.TextSize = 12
 watermark.TextColor3 = Color3.fromRGB(150, 150, 180)
