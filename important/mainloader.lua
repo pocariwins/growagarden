@@ -17,6 +17,7 @@ local function createWindow(title, hasMinimize)
     mainCorner.Parent = window
 
     local mainBorder = Instance.new("UIStroke")
+    mainBorder.Name = "MainBorder"
     mainBorder.Color = Color3.fromRGB(100, 150, 255)
     mainBorder.Thickness = 2
     mainBorder.Parent = window
@@ -102,24 +103,26 @@ local function createWindow(title, hasMinimize)
     watermark.Parent = window
     contentFrame.Parent = window
     
-    return window, contentFrame, minimizeButton, closeButton, titleBar
+    return window, contentFrame, minimizeButton, closeButton, titleBar, mainBorder
 end
 
 -- Create main window
-local mainWindow, mainContent, minimizeButton, closeButton, titleBar = createWindow("POCARI'S EXPLOITS", true)
+local mainWindow, mainContent, minimizeButton, closeButton, titleBar, mainBorder = createWindow("POCARI'S EXPLOITS", true)
 mainWindow.Parent = gui
 
 -- Create tab content container
 local tabContainer = Instance.new("ScrollingFrame")
+tabContainer.Name = "TabContainer"
 tabContainer.Size = UDim2.new(1, 0, 1, 0)
 tabContainer.BackgroundTransparency = 1
 tabContainer.ScrollBarThickness = 6
 tabContainer.ScrollBarImageColor3 = Color3.fromRGB(100, 150, 255)
-tabContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
 tabContainer.ScrollingDirection = Enum.ScrollingDirection.Y
+tabContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
 
 local layout = Instance.new("UIListLayout")
 layout.Padding = UDim.new(0, 5)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
 layout.Parent = tabContainer
 
 -- Store tab functions
@@ -137,6 +140,7 @@ for i = 1, 8 do
     tabButton.TextColor3 = Color3.fromRGB(220, 220, 255)
     tabButton.BorderSizePixel = 0
     tabButton.AutoButtonColor = true
+    tabButton.LayoutOrder = i
     
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 4)
@@ -145,7 +149,7 @@ for i = 1, 8 do
     -- Store tab function
     tabFunctions[i] = function()
         -- Create new window for this tab
-        local tabWindow, tabContent = createWindow(tabButton.Text, false)
+        local tabWindow, tabContentFrame = createWindow(tabButton.Text, false)
         tabWindow.Parent = gui
         
         -- Create back button
@@ -176,11 +180,16 @@ for i = 1, 8 do
         
         -- Add elements to tab window
         backButton.Parent = tabWindow
-        contentLabel.Parent = tabContent
-        tabContent.Parent = tabWindow
+        contentLabel.Parent = tabContentFrame
         
         -- Back button functionality
         backButton.MouseButton1Click:Connect(function()
+            tabWindow:Destroy()
+        end)
+        
+        -- Close button functionality for tab window
+        local tabCloseButton = tabWindow.TitleBar.CloseButton
+        tabCloseButton.MouseButton1Click:Connect(function()
             tabWindow:Destroy()
         end)
     end
@@ -192,11 +201,6 @@ end
 
 -- Add tab container to main content
 tabContainer.Parent = mainContent
-
--- Update canvas size
-layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    tabContainer.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y)
-end)
 
 -- Services
 local userInput = game:GetService("UserInputService")
@@ -248,14 +252,10 @@ minimizeButton.MouseButton1Click:Connect(function()
     if minimized then
         tweenService:Create(mainWindow, tweenInfo, {Size = UDim2.new(mainWindow.Size.X.Scale, mainWindow.Size.X.Offset, 0, 32)}):Play()
         tweenService:Create(mainContent, tweenInfo, {BackgroundTransparency = 1, Size = UDim2.new(1, -16, 0, 0)}):Play()
-        tweenService:Create(tabContainer, tweenInfo, {Size = UDim2.new(1, 0, 0, 0)}):Play()
-        tweenService:Create(minimizeButton, tweenInfo, {TextTransparency = 0.5}):Play()
         minimizeButton.Text = "+"
     else
         tweenService:Create(mainWindow, tweenInfo, {Size = UDim2.new(0, 320, 0, 240)}):Play()
         tweenService:Create(mainContent, tweenInfo, {BackgroundTransparency = 1, Size = UDim2.new(1, -16, 1, -60)}):Play()
-        tweenService:Create(tabContainer, tweenInfo, {Size = UDim2.new(1, 0, 1, 0)}):Play()
-        tweenService:Create(minimizeButton, tweenInfo, {TextTransparency = 0}):Play()
         minimizeButton.Text = "-"
     end
 end)
