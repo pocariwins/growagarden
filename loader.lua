@@ -84,6 +84,7 @@ warningLabel.BackgroundTransparency = 1
 warningLabel.Size = UDim2.new(1, 0, 0, 60)
 warningLabel.TextWrapped = true
 warningLabel.TextXAlignment = Enum.TextXAlignment.Center
+warningLabel.LayoutOrder = 1
 
 local messageLabel = Instance.new("TextLabel")
 messageLabel.Name = "MessageLabel"
@@ -94,6 +95,7 @@ messageLabel.TextColor3 = Color3.fromRGB(220, 220, 255)
 messageLabel.BackgroundTransparency = 1
 messageLabel.Size = UDim2.new(1, 0, 0, 200)
 messageLabel.TextWrapped = true
+messageLabel.LayoutOrder = 2
 
 local activateButton = Instance.new("TextButton")
 activateButton.Name = "ActivateButton"
@@ -106,6 +108,7 @@ activateButton.Size = UDim2.new(0.8, 0, 0, 30)
 activateButton.BorderSizePixel = 0
 activateButton.AutoButtonColor = false
 activateButton.Active = false
+activateButton.LayoutOrder = 3
 
 local buttonCorner = Instance.new("UICorner")
 buttonCorner.CornerRadius = UDim.new(0, 6)
