@@ -117,12 +117,13 @@ watermark.TextYAlignment = Enum.TextYAlignment.Top
 
 local userInput = game:GetService("UserInputService")
 local tweenService = game:GetService("TweenService")
+local runService = game:GetService("RunService")
 
-local dragging = false
 local dragStart
 local startPos
+local isDragging = false
 
-local function update(input)
+local function updateDrag(input)
     local delta = input.Position - dragStart
     mainFrame.Position = UDim2.new(
         startPos.X.Scale, 
@@ -133,28 +134,24 @@ local function update(input)
 end
 
 titleBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        isDragging = true
         dragStart = input.Position
         startPos = mainFrame.Position
         
-        input.Changed:Connect(function()
+        local connection
+        connection = input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
+                isDragging = false
+                connection:Disconnect()
             end
         end)
     end
 end)
 
-titleBar.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
-        dragInput = input
-    end
-end)
-
 userInput.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        update(input)
+    if isDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        updateDrag(input)
     end
 end)
 
