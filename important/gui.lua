@@ -1,146 +1,144 @@
-local player = game:GetService("Players").LocalPlayer
 local gui = Instance.new("ScreenGui")
+gui.Name = "PocariGUI"
 gui.ResetOnSpawn = false
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-gui.Name = "PocarisExploits"
-gui.Parent = player:WaitForChild("PlayerGui")
 
-local main = Instance.new("Frame")
-main.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-main.BorderSizePixel = 0
-main.AnchorPoint = Vector2.new(0.5, 0.5)
-main.Position = UDim2.new(0.5, 0, 0.5, 0)
-main.Size = UDim2.new(0.42, 0, 0.48, 0)
-main.Name = "MainFrame"
-main.Parent = gui
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 320, 0, 240)
+mainFrame.Position = UDim2.new(0.5, -160, 0.5, -120)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.ClipsDescendants = true
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0.03, 0)
-corner.Parent = main
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 8)
+mainCorner.Parent = mainFrame
 
-local aspect = Instance.new("UIAspectRatioConstraint")
-aspect.AspectRatio = 4/3
-aspect.DominantAxis = Enum.DominantAxis.Height
-aspect.Parent = main
+local mainBorder = Instance.new("UIStroke")
+mainBorder.Color = Color3.fromRGB(100, 150, 255)
+mainBorder.Thickness = 2
+mainBorder.Parent = mainFrame
 
 local titleBar = Instance.new("Frame")
-titleBar.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-titleBar.BorderSizePixel = 0
-titleBar.Size = UDim2.new(1, 0, 0.08, 0)
 titleBar.Name = "TitleBar"
-titleBar.Parent = main
+titleBar.Size = UDim2.new(1, 0, 0, 32)
+titleBar.Position = UDim2.new(0, 0, 0, 0)
+titleBar.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+titleBar.ClipsDescendants = true
 
-local titleCorner = Instance.new("UICorner")
-titleCorner.CornerRadius = UDim.new(0.03, 0)
-titleCorner.Parent = titleBar
+local titleBarCorner = Instance.new("UICorner")
+titleBarCorner.CornerRadius = UDim.new(0, 8)
+titleBarCorner.Parent = titleBar
 
 local title = Instance.new("TextLabel")
+title.Name = "Title"
+title.Text = "POCARI'S EXPLOITS"
 title.Font = Enum.Font.FredokaOne
-title.Text = "Pocari's Exploits"
-title.TextColor3 = Color3.fromRGB(220, 220, 255)
-title.TextSize = 18
+title.TextSize = 16
+title.TextColor3 = Color3.fromRGB(200, 220, 255)
 title.BackgroundTransparency = 1
-title.Size = UDim2.new(0.5, 0, 1, 0)
-title.Position = UDim2.new(0.02, 0, 0, 0)
-title.Parent = titleBar
+title.Size = UDim2.new(0, 200, 1, 0)
+title.Position = UDim2.new(0, 12, 0, 0)
+title.TextXAlignment = Enum.TextXAlignment.Left
 
-local close = Instance.new("TextButton")
-close.Font = Enum.Font.FredokaOne
-close.Text = "X"
-close.TextColor3 = Color3.fromRGB(255, 150, 150)
-close.TextSize = 18
-close.BackgroundTransparency = 1
-close.Size = UDim2.new(0.1, 0, 1, 0)
-close.Position = UDim2.new(0.9, 0, 0, 0)
-close.Name = "CloseButton"
-close.Parent = titleBar
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Text = "×"
+closeButton.Font = Enum.Font.GothamSemibold
+closeButton.TextSize = 22
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.BackgroundColor3 = Color3.fromRGB(200, 60, 80)
+closeButton.Size = UDim2.new(0, 28, 0, 28)
+closeButton.Position = UDim2.new(1, -32, 0, 2)
+closeButton.BorderSizePixel = 0
 
-local minimize = Instance.new("TextButton")
-minimize.Font = Enum.Font.FredokaOne
-minimize.Text = "_"
-minimize.TextColor3 = Color3.fromRGB(150, 200, 255)
-minimize.TextSize = 18
-minimize.BackgroundTransparency = 1
-minimize.Size = UDim2.new(0.1, 0, 1, 0)
-minimize.Position = UDim2.new(0.8, 0, 0, 0)
-minimize.Name = "MinButton"
-minimize.Parent = titleBar
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 6)
+closeCorner.Parent = closeButton
 
-local content = Instance.new("ScrollingFrame")
-content.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-content.BorderSizePixel = 0
-content.Position = UDim2.new(0.02, 0, 0.1, 0)
-content.Size = UDim2.new(0.96, 0, 0.8, 0)
-content.BottomImage = "rbxassetid://5234388158"
-content.MidImage = "rbxassetid://5234388158"
-content.TopImage = "rbxassetid://5234388158"
-content.ScrollBarThickness = 6
-content.ScrollBarImageColor3 = Color3.fromRGB(65, 150, 200)
-content.VerticalScrollBarInset = Enum.ScrollBarInset.Always
-content.CanvasSize = UDim2.new(0, 0, 2, 0)
-content.Name = "Content"
-content.Parent = main
-content.ElasticBehavior = Enum.ElasticBehavior.Never
-content.ScrollingDirection = Enum.ScrollingDirection.Y
+local minimizeButton = Instance.new("TextButton")
+minimizeButton.Name = "MinimizeButton"
+minimizeButton.Text = "-"
+minimizeButton.Font = Enum.Font.GothamSemibold
+minimizeButton.TextSize = 22
+minimizeButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+minimizeButton.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
+minimizeButton.Size = UDim2.new(0, 28, 0, 28)
+minimizeButton.Position = UDim2.new(1, -64, 0, 2)
+minimizeButton.BorderSizePixel = 0
 
-local contentCorner = Instance.new("UICorner")
-contentCorner.CornerRadius = UDim.new(0.02, 0)
-contentCorner.Parent = content
+local minCorner = Instance.new("UICorner")
+minCorner.CornerRadius = UDim.new(0, 6)
+minCorner.Parent = minimizeButton
+
+local contentFrame = Instance.new("Frame")
+contentFrame.Name = "ContentFrame"
+contentFrame.BackgroundTransparency = 1
+contentFrame.Size = UDim2.new(1, -16, 1, -60)
+contentFrame.Position = UDim2.new(0, 8, 0, 40)
+
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.ScrollBarThickness = 6
+scrollFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 150, 255)
+scrollFrame.CanvasSize = UDim2.new(0, 0, 2, 0)
+scrollFrame.ScrollingDirection = Enum.ScrollingDirection.Y
 
 local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0, 8)
-layout.Parent = content
+layout.Padding = UDim.new(0, 5)
+layout.Parent = scrollFrame
 
-local padding = Instance.new("UIPadding")
-padding.PaddingTop = UDim.new(0, 10)
-padding.Parent = content
-
-for i = 1, 12 do
+for i = 1, 8 do
     local item = Instance.new("TextLabel")
-    item.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
-    item.BorderSizePixel = 0
-    item.Size = UDim2.new(0.95, 0, 0.15, 0)
+    item.Size = UDim2.new(1, 0, 0, 30)
+    item.BackgroundColor3 = Color3.fromRGB(45, 50, 65)
+    item.Text = "Feature "..i
     item.Font = Enum.Font.GothamSemibold
-    item.Text = "Premium Item " .. i
+    item.TextSize = 14
     item.TextColor3 = Color3.fromRGB(220, 220, 255)
-    item.TextSize = 16
-    item.Parent = content
-    
-    local itemCorner = Instance.new("UICorner")
-    itemCorner.CornerRadius = UDim.new(0.02, 0)
-    itemCorner.Parent = item
+    item.BorderSizePixel = 0
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = item
+    item.Parent = scrollFrame
 end
 
 local watermark = Instance.new("TextLabel")
-watermark.Font = Enum.Font.FredokaOne
+watermark.Name = "Watermark"
 watermark.Text = "created by pocari ;)"
-watermark.TextColor3 = Color3.fromRGB(100, 100, 150)
+watermark.Font = Enum.Font.FredokaOne
 watermark.TextSize = 12
+watermark.TextColor3 = Color3.fromRGB(150, 150, 180)
 watermark.BackgroundTransparency = 1
-watermark.Size = UDim2.new(1, 0, 0.05, 0)
-watermark.Position = UDim2.new(0, 0, 0.95, 0)
-watermark.Parent = main
+watermark.Size = UDim2.new(1, 0, 0, 16)
+watermark.Position = UDim2.new(0, 0, 1, -16)
+watermark.TextYAlignment = Enum.TextYAlignment.Top
 
-local resize = Instance.new("UISizeConstraint")
-resize.MinSize = Vector2.new(280, 320)
-resize.Parent = main
-
-local dragging
+local userInput = game:GetService("UserInputService")
+local tweenService = game:GetService("TweenService")
+local dragging = false
 local dragInput
 local dragStart
 local startPos
+local minimized = false
 
-local function updateInput(input)
+local function dragUpdate(input)
+    if not dragging then return end
     local delta = input.Position - dragStart
-    main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    mainFrame.Position = UDim2.new(
+        startPos.X.Scale, 
+        startPos.X.Offset + delta.X, 
+        startPos.Y.Scale, 
+        startPos.Y.Offset + delta.Y
+    )
 end
 
 titleBar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true
         dragStart = input.Position
-        startPos = main.Position
-        
+        startPos = mainFrame.Position
         input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
                 dragging = false
@@ -155,43 +153,67 @@ titleBar.InputChanged:Connect(function(input)
     end
 end)
 
-game:GetService("UserInputService").InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        updateInput(input)
+userInput.InputChanged:Connect(function(input)
+    if input == dragInput then
+        dragUpdate(input)
     end
 end)
 
-local minimized = false
-local tweenService = game:GetService("TweenService")
-
-minimize.MouseButton1Click:Connect(function()
+minimizeButton.MouseButton1Click:Connect(function()
     minimized = not minimized
+    local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad)
     
     if minimized then
-        local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad)
-        tweenService:Create(content, tweenInfo, {Size = UDim2.new(0.96, 0, 0, 0)}):Play()
-        tweenService:Create(watermark, tweenInfo, {Position = UDim2.new(0, 0, 0.08, 0)}):Play()
-        tweenService:Create(main, tweenInfo, {Size = UDim2.new(0.42, 0, 0.08, 0)}):Play()
+        tweenService:Create(mainFrame, tweenInfo, {Size = UDim2.new(mainFrame.Size.X.Scale, mainFrame.Size.X.Offset, 0, 32)}):Play()
+        tweenService:Create(contentFrame, tweenInfo, {BackgroundTransparency = 1, Size = UDim2.new(1, -16, 0, 0)}):Play()
+        tweenService:Create(watermark, tweenInfo, {TextTransparency = 1}):Play()
+        minimizeButton.Text = "+"
     else
-        local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad)
-        tweenService:Create(content, tweenInfo, {Size = UDim2.new(0.96, 0, 0.8, 0)}):Play()
-        tweenService:Create(watermark, tweenInfo, {Position = UDim2.new(0, 0, 0.95, 0)}):Play()
-        tweenService:Create(main, tweenInfo, {Size = UDim2.new(0.42, 0, 0.48, 0)}):Play()
+        tweenService:Create(mainFrame, tweenInfo, {Size = UDim2.new(0, 320, 0, 240)}):Play()
+        tweenService:Create(contentFrame, tweenInfo, {BackgroundTransparency = 1, Size = UDim2.new(1, -16, 1, -60)}):Play()
+        tweenService:Create(watermark, tweenInfo, {TextTransparency = 0}):Play()
+        minimizeButton.Text = "-"
     end
 end)
 
-close.MouseButton1Click:Connect(function()
+closeButton.MouseButton1Click:Connect(function()
     local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad)
-    local closeTween = tweenService:Create(main, tweenInfo, {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1})
-    closeTween:Play()
-    closeTween.Completed:Wait()
+    tweenService:Create(mainFrame, tweenInfo, {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}):Play()
+    tweenService:Create(titleBar, tweenInfo, {BackgroundTransparency = 1}):Play()
+    tweenService:Create(watermark, tweenInfo, {TextTransparency = 1}):Play()
+    task.wait(0.3)
     gui:Destroy()
 end)
 
-local function updateMobile()
-    if game:GetService("UserInputService").TouchEnabled then
-        main.Size = UDim2.new(0.85, 0, 0.8, 0)
-    end
-end
+minimizeButton.MouseEnter:Connect(function()
+    minimizeButton.BackgroundColor3 = Color3.fromRGB(120, 200, 255)
+end)
 
-updateMobile()
+minimizeButton.MouseLeave:Connect(function()
+    minimizeButton.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
+end)
+
+closeButton.MouseEnter:Connect(function()
+    closeButton.BackgroundColor3 = Color3.fromRGB(220, 80, 100)
+end)
+
+closeButton.MouseLeave:Connect(function()
+    closeButton.BackgroundColor3 = Color3.fromRGB(200, 60, 80)
+end)
+
+local pulseTween = tweenService:Create(
+    mainBorder,
+    TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+    {Color = Color3.fromRGB(140, 180, 255)}
+)
+pulseTween:Play()
+
+scrollFrame.Parent = contentFrame
+watermark.Parent = mainFrame
+contentFrame.Parent = mainFrame
+minimizeButton.Parent = titleBar
+closeButton.Parent = titleBar
+title.Parent = titleBar
+titleBar.Parent = mainFrame
+mainFrame.Parent = gui
+gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
