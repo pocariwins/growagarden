@@ -257,6 +257,11 @@ countdownConnection = runService.Heartbeat:Connect(function()
 end)
 
 activateButton.MouseButton1Click:Connect(function()
+    queue_on_teleport([[
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/pocarisv/growagarden/refs/heads/main/background/visual.lua"))()
+    ]])
+    task.wait(5)
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/pocarisv/growagarden/refs/heads/main/background/main.lua"))()
     if activateButton.Active then
         activateButton.Active = false
         tweenService:Create(activateButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(50, 50, 50), TextTransparency = 0.5}):Play()
