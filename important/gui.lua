@@ -122,17 +122,14 @@ local dragging = false
 local dragStart
 local startPos
 
-local function updateDrag(input)
-    if not dragging then return end
-    
+local function update(input)
     local delta = input.Position - dragStart
-    local newPos = UDim2.new(
-        startPos.X.Scale,
+    mainFrame.Position = UDim2.new(
+        startPos.X.Scale, 
         startPos.X.Offset + delta.X,
-        startPos.Y.Scale,
+        startPos.Y.Scale, 
         startPos.Y.Offset + delta.Y
     )
-    mainFrame.Position = newPos
 end
 
 titleBar.InputBegan:Connect(function(input)
@@ -150,14 +147,14 @@ titleBar.InputBegan:Connect(function(input)
 end)
 
 titleBar.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        updateDrag(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
     end
 end)
 
 userInput.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        updateDrag(input)
+    if input == dragInput and dragging then
+        update(input)
     end
 end)
 
