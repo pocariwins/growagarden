@@ -117,21 +117,22 @@ watermark.TextYAlignment = Enum.TextYAlignment.Top
 
 local userInput = game:GetService("UserInputService")
 local tweenService = game:GetService("TweenService")
+
 local dragging = false
-local dragInput
 local dragStart
 local startPos
-local minimized = false
 
-local function dragUpdate(input)
+local function updateDrag(input)
     if not dragging then return end
+    
     local delta = input.Position - dragStart
-    mainFrame.Position = UDim2.new(
-        startPos.X.Scale, 
-        startPos.X.Offset + delta.X, 
-        startPos.Y.Scale, 
+    local newPos = UDim2.new(
+        startPos.X.Scale,
+        startPos.X.Offset + delta.X,
+        startPos.Y.Scale,
         startPos.Y.Offset + delta.Y
     )
+    mainFrame.Position = newPos
 end
 
 titleBar.InputBegan:Connect(function(input)
@@ -139,6 +140,7 @@ titleBar.InputBegan:Connect(function(input)
         dragging = true
         dragStart = input.Position
         startPos = mainFrame.Position
+        
         input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
                 dragging = false
@@ -148,17 +150,18 @@ titleBar.InputBegan:Connect(function(input)
 end)
 
 titleBar.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
-        dragInput = input
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        updateDrag(input)
     end
 end)
 
 userInput.InputChanged:Connect(function(input)
-    if input == dragInput then
-        dragUpdate(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        updateDrag(input)
     end
 end)
 
+local minimized = false
 minimizeButton.MouseButton1Click:Connect(function()
     minimized = not minimized
     local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad)
