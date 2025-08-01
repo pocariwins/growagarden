@@ -103,7 +103,6 @@ activateButton.TextSize = 16
 activateButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 activateButton.BackgroundColor3 = Color3.fromRGB(200, 60, 80)
 activateButton.Size = UDim2.new(0.8, 0, 0, 30)
-activateButton.Position = UDim2.new(0.1, 0, 0, 0)
 activateButton.BorderSizePixel = 0
 activateButton.AutoButtonColor = false
 activateButton.Active = false
