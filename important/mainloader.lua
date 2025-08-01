@@ -4,7 +4,7 @@ gui.ResetOnSpawn = false
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 -- Main GUI creation function
-local function createWindow(title, hasMinimize)
+local function createWindow(title, isMain)
     local window = Instance.new("Frame")
     window.Name = "MainFrame"
     window.Size = UDim2.new(0, 320, 0, 240)
@@ -59,25 +59,22 @@ local function createWindow(title, hasMinimize)
     closeCorner.CornerRadius = UDim.new(0, 6)
     closeCorner.Parent = closeButton
 
-    -- Only add minimize button if requested
-    local minimizeButton
-    if hasMinimize then
-        minimizeButton = Instance.new("TextButton")
-        minimizeButton.Name = "MinimizeButton"
-        minimizeButton.Text = "-"
-        minimizeButton.Font = Enum.Font.GothamSemibold
-        minimizeButton.TextSize = 22
-        minimizeButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-        minimizeButton.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
-        minimizeButton.Size = UDim2.new(0, 28, 0, 28)
-        minimizeButton.Position = UDim2.new(1, -64, 0, 2)
-        minimizeButton.BorderSizePixel = 0
+    -- Always create minimize button for all windows
+    local minimizeButton = Instance.new("TextButton")
+    minimizeButton.Name = "MinimizeButton"
+    minimizeButton.Text = "-"
+    minimizeButton.Font = Enum.Font.GothamSemibold
+    minimizeButton.TextSize = 22
+    minimizeButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+    minimizeButton.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
+    minimizeButton.Size = UDim2.new(0, 28, 0, 28)
+    minimizeButton.Position = UDim2.new(1, -64, 0, 2)
+    minimizeButton.BorderSizePixel = 0
 
-        local minCorner = Instance.new("UICorner")
-        minCorner.CornerRadius = UDim.new(0, 6)
-        minCorner.Parent = minimizeButton
-        minimizeButton.Parent = titleBar
-    end
+    local minCorner = Instance.new("UICorner")
+    minCorner.CornerRadius = UDim.new(0, 6)
+    minCorner.Parent = minimizeButton
+    minimizeButton.Parent = titleBar
 
     local contentFrame = Instance.new("Frame")
     contentFrame.Name = "ContentFrame"
@@ -103,11 +100,11 @@ local function createWindow(title, hasMinimize)
     watermark.Parent = window
     contentFrame.Parent = window
     
-    return window, contentFrame, minimizeButton, closeButton, titleBar, mainBorder
+    return window, contentFrame, minimizeButton, closeButton, titleBar, mainBorder, watermark
 end
 
 -- Create main window
-local mainWindow, mainContent, minimizeButton, closeButton, titleBar, mainBorder = createWindow("POCARI'S EXPLOITS", true)
+local mainWindow, mainContent, minimizeButton, closeButton, titleBar, mainBorder, watermark = createWindow("POCARI'S EXPLOITS", true)
 mainWindow.Parent = gui
 
 -- Create tab content container
@@ -149,7 +146,7 @@ for i = 1, 8 do
     -- Store tab function
     tabFunctions[i] = function()
         -- Create new window for this tab
-        local tabWindow, tabContentFrame = createWindow(tabButton.Text, false)
+        local tabWindow, tabContentFrame, tabMinimize, tabClose, tabTitleBar, tabBorder, tabWatermark = createWindow(tabButton.Text, false)
         tabWindow.Parent = gui
         
         -- Create back button
@@ -188,10 +185,91 @@ for i = 1, 8 do
         end)
         
         -- Close button functionality for tab window
-        local tabCloseButton = tabWindow.TitleBar.CloseButton
-        tabCloseButton.MouseButton1Click:Connect(function()
+        tabClose.MouseButton1Click:Connect(function()
             tabWindow:Destroy()
         end)
+        
+        -- Tab window dragging functionality
+        local tabDragStart
+        local tabStartPos
+        local tabDragging = false
+
+        local function updateTabDrag(input)
+            local delta = input.Position - tabDragStart
+            tabWindow.Position = UDim2.new(
+                tabStartPos.X.Scale, 
+                tabStartPos.X.Offset + delta.X,
+                tabStartPos.Y.Scale, 
+                tabStartPos.Y.Offset + delta.Y
+            )
+        end
+
+        tabTitleBar.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                tabDragging = true
+                tabDragStart = input.Position
+                tabStartPos = tabWindow.Position
+                
+                local connection
+                connection = input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        tabDragging = false
+                        connection:Disconnect()
+                    end
+                end)
+            end
+        end)
+
+        game:GetService("UserInputService").InputChanged:Connect(function(input)
+            if tabDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                updateTabDrag(input)
+            end
+        end)
+        
+        -- Tab window minimize functionality
+        local tabMinimized = false
+        tabMinimize.MouseButton1Click:Connect(function()
+            tabMinimized = not tabMinimized
+            local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad)
+            local tweenService = game:GetService("TweenService")
+            
+            if tabMinimized then
+                tweenService:Create(tabWindow, tweenInfo, {Size = UDim2.new(tabWindow.Size.X.Scale, tabWindow.Size.X.Offset, 0, 32)}):Play()
+                tweenService:Create(tabContentFrame, tweenInfo, {BackgroundTransparency = 1, Size = UDim2.new(1, -16, 0, 0)}):Play()
+                tweenService:Create(tabWatermark, tweenInfo, {TextTransparency = 1}):Play()
+                tabMinimize.Text = "+"
+            else
+                tweenService:Create(tabWindow, tweenInfo, {Size = UDim2.new(0, 320, 0, 240)}):Play()
+                tweenService:Create(tabContentFrame, tweenInfo, {BackgroundTransparency = 1, Size = UDim2.new(1, -16, 1, -60)}):Play()
+                tweenService:Create(tabWatermark, tweenInfo, {TextTransparency = 0}):Play()
+                tabMinimize.Text = "-"
+            end
+        end)
+        
+        -- Tab window button hover effects
+        tabMinimize.MouseEnter:Connect(function()
+            tabMinimize.BackgroundColor3 = Color3.fromRGB(120, 200, 255)
+        end)
+
+        tabMinimize.MouseLeave:Connect(function()
+            tabMinimize.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
+        end)
+
+        tabClose.MouseEnter:Connect(function()
+            tabClose.BackgroundColor3 = Color3.fromRGB(220, 80, 100)
+        end)
+
+        tabClose.MouseLeave:Connect(function()
+            tabClose.BackgroundColor3 = Color3.fromRGB(200, 60, 80)
+        end)
+        
+        -- Tab window border pulse effect
+        local tabPulseTween = game:GetService("TweenService"):Create(
+            tabBorder,
+            TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+            {Color = Color3.fromRGB(140, 180, 255)}
+        )
+        tabPulseTween:Play()
     end
     
     -- Connect tab button
@@ -252,10 +330,12 @@ minimizeButton.MouseButton1Click:Connect(function()
     if minimized then
         tweenService:Create(mainWindow, tweenInfo, {Size = UDim2.new(mainWindow.Size.X.Scale, mainWindow.Size.X.Offset, 0, 32)}):Play()
         tweenService:Create(mainContent, tweenInfo, {BackgroundTransparency = 1, Size = UDim2.new(1, -16, 0, 0)}):Play()
+        tweenService:Create(watermark, tweenInfo, {TextTransparency = 1}):Play()
         minimizeButton.Text = "+"
     else
         tweenService:Create(mainWindow, tweenInfo, {Size = UDim2.new(0, 320, 0, 240)}):Play()
         tweenService:Create(mainContent, tweenInfo, {BackgroundTransparency = 1, Size = UDim2.new(1, -16, 1, -60)}):Play()
+        tweenService:Create(watermark, tweenInfo, {TextTransparency = 0}):Play()
         minimizeButton.Text = "-"
     end
 end)
