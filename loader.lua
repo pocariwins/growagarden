@@ -67,11 +67,12 @@ scrollFrame.Size = UDim2.new(1, 0, 1, 0)
 scrollFrame.BackgroundTransparency = 1
 scrollFrame.ScrollBarThickness = 6
 scrollFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 150, 255)
-scrollFrame.CanvasSize = UDim2.new(0, 0, 2.5, 0)
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 scrollFrame.ScrollingDirection = Enum.ScrollingDirection.Y
 
 local layout = Instance.new("UIListLayout")
 layout.Padding = UDim.new(0, 8)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
 layout.Parent = scrollFrame
 
 local warningLabel = Instance.new("TextLabel")
@@ -81,7 +82,8 @@ warningLabel.Font = Enum.Font.FredokaOne
 warningLabel.TextSize = 16
 warningLabel.TextColor3 = Color3.fromRGB(255, 120, 120)
 warningLabel.BackgroundTransparency = 1
-warningLabel.Size = UDim2.new(1, 0, 0, 60)
+warningLabel.Size = UDim2.new(1, 0, 0, 0)
+warningLabel.AutomaticSize = Enum.AutomaticSize.Y
 warningLabel.TextWrapped = true
 warningLabel.TextXAlignment = Enum.TextXAlignment.Center
 warningLabel.LayoutOrder = 1
@@ -93,9 +95,16 @@ messageLabel.Font = Enum.Font.GothamSemibold
 messageLabel.TextSize = 12
 messageLabel.TextColor3 = Color3.fromRGB(220, 220, 255)
 messageLabel.BackgroundTransparency = 1
-messageLabel.Size = UDim2.new(1, 0, 0, 200)
+messageLabel.Size = UDim2.new(1, 0, 0, 0)
+messageLabel.AutomaticSize = Enum.AutomaticSize.Y
 messageLabel.TextWrapped = true
 messageLabel.LayoutOrder = 2
+
+local buttonContainer = Instance.new("Frame")
+buttonContainer.Name = "ButtonContainer"
+buttonContainer.BackgroundTransparency = 1
+buttonContainer.Size = UDim2.new(1, 0, 0, 40)
+buttonContainer.LayoutOrder = 3
 
 local activateButton = Instance.new("TextButton")
 activateButton.Name = "ActivateButton"
@@ -104,11 +113,13 @@ activateButton.Font = Enum.Font.FredokaOne
 activateButton.TextSize = 16
 activateButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 activateButton.BackgroundColor3 = Color3.fromRGB(200, 60, 80)
-activateButton.Size = UDim2.new(0.8, 0, 0, 30)
+activateButton.Size = UDim2.new(0.8, 0, 0.8, 0)
+activateButton.Position = UDim2.new(0.1, 0, 0.1, 0)
+activateButton.AnchorPoint = Vector2.new(0.5, 0.5)
+activateButton.Position = UDim2.new(0.5, 0, 0.5, 0)
 activateButton.BorderSizePixel = 0
 activateButton.AutoButtonColor = false
 activateButton.Active = false
-activateButton.LayoutOrder = 3
 
 local buttonCorner = Instance.new("UICorner")
 buttonCorner.CornerRadius = UDim.new(0, 6)
@@ -137,6 +148,10 @@ local runService = game:GetService("RunService")
 local dragStart
 local startPos
 local isDragging = false
+
+layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y)
+end)
 
 local function updateDrag(input)
     local delta = input.Position - dragStart
@@ -253,7 +268,8 @@ end)
 
 warningLabel.Parent = scrollFrame
 messageLabel.Parent = scrollFrame
-activateButton.Parent = scrollFrame
+buttonContainer.Parent = scrollFrame
+activateButton.Parent = buttonContainer
 scrollFrame.Parent = contentFrame
 watermark.Parent = mainFrame
 contentFrame.Parent = mainFrame
