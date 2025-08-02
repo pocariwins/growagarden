@@ -290,6 +290,8 @@ layout.Parent = tabContainer
 
 -- Create feature tabs
 local tabContents = {}
+local firstTabStatusLabel = nil
+
 for i = 1, 8 do
     -- Create tab button
     local tabButton = Instance.new("TextButton")
@@ -338,6 +340,7 @@ for i = 1, 8 do
     
     -- Create scrollable content container
     local scrollFrame = Instance.new("ScrollingFrame")
+    scrollFrame.Name = "ScrollFrame"
     scrollFrame.Size = UDim2.new(1, 0, 1, -40)
     scrollFrame.Position = UDim2.new(0, 0, 0, 40)
     scrollFrame.BackgroundTransparency = 1
@@ -432,6 +435,8 @@ for i = 1, 8 do
         statusLabel.BackgroundTransparency = 1
         statusLabel.LayoutOrder = 5
         statusLabel.Parent = scrollFrame
+        
+        firstTabStatusLabel = statusLabel  -- Store for later access
         
         -- Credit
         local credit = Instance.new("TextLabel")
@@ -557,6 +562,13 @@ end
 -- Add tab container to content frame
 tabContainer.Parent = contentFrame
 
+-- Set first tab as active by default
+tabContainer.Visible = false
+tabContainer.Parent = nil
+tabContents[1].Visible = true
+tabContents[1].Parent = contentFrame
+titleLabel.Text = "EGG RANDOMIZER"
+
 -- Services
 local userInput = game:GetService("UserInputService")
 local tweenService = game:GetService("TweenService")
@@ -590,7 +602,7 @@ titleBar.InputBegan:Connect(function(input)
             end
         end)
     end
-end
+end)
 
 userInput.InputChanged:Connect(function(input)
     if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
@@ -664,9 +676,13 @@ coroutine.wrap(function()
         applyEggESP(egg, truePetMap[egg])
     end
     
-    -- Update status label if it exists
-    if tabContents[1] and tabContents[1]:FindFirstChild("StatusLabel", true) then
-        tabContents[1].StatusLabel.Text = "Found "..#eggs.." eggs nearby"
+    -- Update status label
+    if firstTabStatusLabel then
+        if #eggs == 0 then
+            firstTabStatusLabel.Text = "No eggs found nearby"
+        else
+            firstTabStatusLabel.Text = "Found "..#eggs.." eggs nearby"
+        end
     end
 end)()
 
