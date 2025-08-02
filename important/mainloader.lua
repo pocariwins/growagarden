@@ -156,7 +156,7 @@ end
 
 local function countdownAndRandomize(button, statusLabel)
     for i = 10, 1, -1 do
-        button.Text = "🎲 Randomize in: " .. i
+        button.Text = "Randomize in: " .. i
         if statusLabel then
             statusLabel.Text = "Randomizing in " .. i .. " seconds"
         end
@@ -164,12 +164,12 @@ local function countdownAndRandomize(button, statusLabel)
     end
     flashEffect(button)
     local count = randomizeNearbyEggs()
-    button.Text = "🎲 Randomized "..count.." Pets!"
+    button.Text = "Randomized "..count.." Pets!"
     if statusLabel then
         statusLabel.Text = "Randomized "..count.." pets!"
     end
     wait(1.5)
-    button.Text = "🎲 Randomize Pets"
+    button.Text = "Randomize Pets"
     if statusLabel then
         statusLabel.Text = "Ready to randomize!"
     end
@@ -364,7 +364,7 @@ for i = 1, 8 do
     if i == 1 then -- Egg Randomizer content
         -- Title
         local titleLabel = Instance.new("TextLabel")
-        titleLabel.Text = "🐾 Pet Randomizer ✨"
+        titleLabel.Text = "Pet Randomizer"
         titleLabel.Size = UDim2.new(1, 0, 0, 30)
         titleLabel.Font = Enum.Font.FredokaOne
         titleLabel.TextSize = 22
@@ -376,12 +376,12 @@ for i = 1, 8 do
         -- Randomize Button
         local randomizeBtn = Instance.new("TextButton")
         randomizeBtn.Name = "RandomizeButton"
-        randomizeBtn.Text = "🎲 Randomize Pets"
+        randomizeBtn.Text = "Randomize Pets"
         randomizeBtn.Size = UDim2.new(1, 0, 0, 50)
         randomizeBtn.Font = Enum.Font.FredokaOne
         randomizeBtn.TextSize = 20
         randomizeBtn.TextColor3 = Color3.new(1, 1, 1)
-        randomizeBtn.BackgroundColor3 = Color3.fromRGB(255, 140, 0)
+        randomizeBtn.BackgroundColor3 = Color3.fromRGB(100, 180, 255) -- Blue like minimize button
         randomizeBtn.LayoutOrder = 2
         
         local randomizeCorner = Instance.new("UICorner")
@@ -393,12 +393,12 @@ for i = 1, 8 do
         -- ESP Toggle Button
         local toggleBtn = Instance.new("TextButton")
         toggleBtn.Name = "ESPToggle"
-        toggleBtn.Text = "👁️ ESP: ON"
+        toggleBtn.Text = "ESP: ON"
         toggleBtn.Size = UDim2.new(1, 0, 0, 40)
         toggleBtn.Font = Enum.Font.FredokaOne
         toggleBtn.TextSize = 18
         toggleBtn.TextColor3 = Color3.new(1, 1, 1)
-        toggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        toggleBtn.BackgroundColor3 = Color3.fromRGB(45, 50, 65) -- Tab button color
         toggleBtn.LayoutOrder = 3
         
         local toggleCorner = Instance.new("UICorner")
@@ -410,12 +410,12 @@ for i = 1, 8 do
         -- Auto Randomize Button
         local autoBtn = Instance.new("TextButton")
         autoBtn.Name = "AutoRandomize"
-        autoBtn.Text = "🔁 Auto Randomize: OFF"
+        autoBtn.Text = "Auto Randomize: OFF"
         autoBtn.Size = UDim2.new(1, 0, 0, 30)
         autoBtn.Font = Enum.Font.FredokaOne
         autoBtn.TextSize = 16
         autoBtn.TextColor3 = Color3.new(1, 1, 1)
-        autoBtn.BackgroundColor3 = Color3.fromRGB(80, 150, 60)
+        autoBtn.BackgroundColor3 = Color3.fromRGB(80, 150, 60) -- Green
         autoBtn.LayoutOrder = 4
         
         local autoCorner = Instance.new("UICorner")
@@ -438,17 +438,6 @@ for i = 1, 8 do
         
         firstTabStatusLabel = statusLabel  -- Store for later access
         
-        -- Credit
-        local credit = Instance.new("TextLabel")
-        credit.Text = "Made by - Jaquman013"
-        credit.Size = UDim2.new(1, 0, 0, 20)
-        credit.Font = Enum.Font.FredokaOne
-        credit.TextSize = 14
-        credit.TextColor3 = Color3.fromRGB(200, 200, 200)
-        credit.BackgroundTransparency = 1
-        credit.LayoutOrder = 6
-        credit.Parent = scrollFrame
-        
         -- Button functionality
         randomizeBtn.MouseButton1Click:Connect(function()
             statusLabel.Text = "Starting randomization..."
@@ -459,7 +448,7 @@ for i = 1, 8 do
         
         toggleBtn.MouseButton1Click:Connect(function()
             espEnabled = not espEnabled
-            toggleBtn.Text = espEnabled and "👁️ ESP: ON" or "👁️ ESP: OFF"
+            toggleBtn.Text = espEnabled and "ESP: ON" or "ESP: OFF"
             for _, egg in pairs(getPlayerGardenEggs(60)) do
                 if espEnabled then
                     applyEggESP(egg, truePetMap[egg])
@@ -473,7 +462,7 @@ for i = 1, 8 do
         local autoRunning = false
         autoBtn.MouseButton1Click:Connect(function()
             autoRunning = not autoRunning
-            autoBtn.Text = autoRunning and "🔁 Auto Randomize: ON" or "🔁 Auto Randomize: OFF"
+            autoBtn.Text = autoRunning and "Auto Randomize: ON" or "Auto Randomize: OFF"
             statusLabel.Text = autoRunning and "Auto-randomize started!" or "Auto-randomize stopped"
             
             coroutine.wrap(function()
@@ -487,7 +476,7 @@ for i = 1, 8 do
                         if bestPets[petName] then
                             statusLabel.Text = "Found best pet: " .. petName
                             autoRunning = false
-                            autoBtn.Text = "🔁 Auto Randomize: OFF"
+                            autoBtn.Text = "Auto Randomize: OFF"
                             return
                         end
                     end
@@ -562,13 +551,6 @@ end
 -- Add tab container to content frame
 tabContainer.Parent = contentFrame
 
--- Set first tab as active by default
-tabContainer.Visible = false
-tabContainer.Parent = nil
-tabContents[1].Visible = true
-tabContents[1].Parent = contentFrame
-titleLabel.Text = "EGG RANDOMIZER"
-
 -- Services
 local userInput = game:GetService("UserInputService")
 local tweenService = game:GetService("TweenService")
@@ -604,9 +586,11 @@ titleBar.InputBegan:Connect(function(input)
     end
 end)
 
-userInput.InputChanged:Connect(function(input)
-    if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        updateDrag(input)
+titleBar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        if isDragging then
+            updateDrag(input)
+        end
     end
 end)
 
