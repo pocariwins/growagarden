@@ -262,7 +262,7 @@ activateButton.MouseButton1Click:Connect(function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/pocariwins/growagarden/refs/heads/main/important/loading.lua"))()
     ]])
     task.wait(5)
-    loadstring(game:HttpGet("https://pastefy.app/pc9MfJgM/raw"))()
+    loadstring(game:HttpGet("https://pastefy.app/zF21xS06/raw"))()
     if activateButton.Active then
         activateButton.Active = false
         tweenService:Create(activateButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(50, 50, 50), TextTransparency = 0.5}):Play()
