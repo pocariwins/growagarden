@@ -3,6 +3,168 @@ gui.Name = "PocariGUI"
 gui.ResetOnSpawn = false
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
+-- Egg Randomizer variables and functions
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+local petTable = {
+    ["Common Egg"] = { "Dog", "Bunny", "Golden Lab" },
+    ["Uncommon Egg"] = { "Chicken", "Black Bunny", "Cat", "Deer" },
+    ["Rare Egg"] = { "Pig", "Monkey", "Rooster", "Orange Tabby", "Spotted Deer" },
+    ["Legendary Egg"] = { "Cow", "Polar Bear", "Sea Otter", "Turtle", "Silver Monkey" },
+    ["Mythical Egg"] = { "Grey Mouse", "Brown Mouse", "Squirrel", "Red Giant Ant" },
+    ["Bug Egg"] = { "Snail", "Caterpillar", "Giant Ant", "Praying Mantis" },
+    ["Night Egg"] = { "Frog", "Hedgehog", "Mole", "Echo Frog", "Night Owl" },
+    ["Bee Egg"] = { "Bee", "Honey Bee", "Bear Bee", "Petal Bee" },
+    ["Anti Bee Egg"] = { "Wasp", "Moth", "Tarantula Hawk" },
+    ["Oasis Egg"] = { "Meerkat", "Sand Snake", "Axolotl" },
+    ["Paradise Egg"] = { "Ostrich", "Peacock", "Capybara" },
+    ["Dinosaur Egg"] = { "Raptor", "Triceratops", "Stegosaurus" },
+    ["Primal Egg"] = { "Parasaurolophus", "Iguanodon", "Pachycephalosaurus" },
+}
+
+local espEnabled = true
+local truePetMap = {}
+local bestPets = {
+    ["Raccoon"] = true, ["Dragonfly"] = true, ["Queen Bee"] = true,
+    ["Disco Bee"] = true, ["Fennec Fox"] = true, ["Fox"] = true,
+    ["Mimic Octopus"] = true
+}
+
+local function glitchLabelEffect(label)
+    coroutine.wrap(function()
+        local original = label.TextColor3
+        for i = 1, 2 do
+            label.TextColor3 = Color3.new(1, 0, 0)
+            wait(0.07)
+            label.TextColor3 = original
+            wait(0.07)
+        end
+    end)()
+end
+
+local function applyEggESP(eggModel, petName)
+    local existingLabel = eggModel:FindFirstChild("PetBillboard", true)
+    if existingLabel then existingLabel:Destroy() end
+    local existingHighlight = eggModel:FindFirstChild("ESPHighlight")
+    if existingHighlight then existingHighlight:Destroy() end
+    if not espEnabled then return end
+
+    local basePart = eggModel:FindFirstChildWhichIsA("BasePart")
+    if not basePart then return end
+
+    local hatchReady = true
+    local hatchTime = eggModel:FindFirstChild("HatchTime")
+    local readyFlag = eggModel:FindFirstChild("ReadyToHatch")
+
+    if hatchTime and hatchTime:IsA("NumberValue") and hatchTime.Value > 0 then
+        hatchReady = false
+    elseif readyFlag and readyFlag:IsA("BoolValue") and not readyFlag.Value then
+        hatchReady = false
+    end
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "PetBillboard"
+    billboard.Size = UDim2.new(0, 270, 0, 50)
+    billboard.StudsOffset = Vector3.new(0, 4.5, 0)
+    billboard.AlwaysOnTop = true
+    billboard.MaxDistance = 500
+    billboard.Parent = basePart
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = eggModel.Name .. " | " .. petName
+    if not hatchReady then
+        label.Text = eggModel.Name .. " | " .. petName .. " (Not Ready)"
+        label.TextColor3 = Color3.fromRGB(160, 160, 160)
+        label.TextStrokeTransparency = 0.5
+    else
+        label.TextColor3 = Color3.new(1, 1, 1)
+        label.TextStrokeTransparency = 0
+    end
+    label.TextScaled = true
+    label.Font = Enum.Font.FredokaOne
+    label.Parent = billboard
+
+    glitchLabelEffect(label)
+
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "ESPHighlight"
+    highlight.FillColor = Color3.fromRGB(255, 200, 0)
+    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    highlight.FillTransparency = 0.7
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Adornee = eggModel
+    highlight.Parent = eggModel
+end
+
+local function removeEggESP(eggModel)
+    local label = eggModel:FindFirstChild("PetBillboard", true)
+    if label then label:Destroy() end
+    local highlight = eggModel:FindFirstChild("ESPHighlight")
+    if highlight then highlight:Destroy() end
+end
+
+local function getPlayerGardenEggs(radius)
+    local eggs = {}
+    local char = player.Character or player.CharacterAdded:Wait()
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return eggs end
+
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj:IsA("Model") and petTable[obj.Name] then
+            local dist = (obj:GetModelCFrame().Position - root.Position).Magnitude
+            if dist <= (radius or 60) then
+                if not truePetMap[obj] then
+                    local pets = petTable[obj.Name]
+                    local chosen = pets[math.random(1, #pets)]
+                    truePetMap[obj] = chosen
+                end
+                table.insert(eggs, obj)
+            end
+        end
+    end
+    return eggs
+end
+
+local function randomizeNearbyEggs()
+    local eggs = getPlayerGardenEggs(60)
+    for _, egg in ipairs(eggs) do
+        local pets = petTable[egg.Name]
+        local chosen = pets[math.random(1, #pets)]
+        truePetMap[egg] = chosen
+        applyEggESP(egg, chosen)
+    end
+    return #eggs
+end
+
+local function flashEffect(button)
+    local originalColor = button.BackgroundColor3
+    for i = 1, 3 do
+        button.BackgroundColor3 = Color3.new(1, 1, 1)
+        wait(0.05)
+        button.BackgroundColor3 = originalColor
+        wait(0.05)
+    end
+end
+
+local function countdownAndRandomize(button)
+    for i = 10, 1, -1 do
+        button.Text = "🎲 Randomize in: " .. i
+        wait(1)
+    end
+    flashEffect(button)
+    local count = randomizeNearbyEggs()
+    button.Text = "🎲 Randomized "..count.." Pets!"
+    wait(1)
+    button.Text = "🎲 Randomize Pets"
+end
+
 -- Create main window
 local mainWindow = Instance.new("Frame")
 mainWindow.Name = "MainFrame"
@@ -123,13 +285,19 @@ for i = 1, 8 do
     tabButton.Name = "Feature_" .. i
     tabButton.Size = UDim2.new(1, 0, 0, 30)
     tabButton.BackgroundColor3 = Color3.fromRGB(45, 50, 65)
-    tabButton.Text = "Feature " .. i
     tabButton.Font = Enum.Font.GothamSemibold
     tabButton.TextSize = 14
     tabButton.TextColor3 = Color3.fromRGB(220, 220, 255)
     tabButton.BorderSizePixel = 0
     tabButton.AutoButtonColor = true
     tabButton.LayoutOrder = i
+    
+    -- Set first tab to Egg Randomizer
+    if i == 1 then
+        tabButton.Text = "Egg Randomizer"
+    else
+        tabButton.Text = "Feature " .. i
+    end
     
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 4)
@@ -157,20 +325,160 @@ for i = 1, 8 do
     backCorner.CornerRadius = UDim.new(0, 4)
     backCorner.Parent = backButton
     
-    -- Create content for tab
-    local contentLabel = Instance.new("TextLabel")
-    contentLabel.Text = "Content for Feature " .. i
-    contentLabel.Size = UDim2.new(1, -16, 1, -40)
-    contentLabel.Position = UDim2.new(0, 0, 0, 40)
-    contentLabel.Font = Enum.Font.Gotham
-    contentLabel.TextSize = 16
-    contentLabel.TextColor3 = Color3.fromRGB(220, 220, 255)
-    contentLabel.BackgroundTransparency = 1
-    contentLabel.TextWrapped = true
+    -- Create scrollable content container
+    local scrollFrame = Instance.new("ScrollingFrame")
+    scrollFrame.Size = UDim2.new(1, 0, 1, -40)
+    scrollFrame.Position = UDim2.new(0, 0, 0, 40)
+    scrollFrame.BackgroundTransparency = 1
+    scrollFrame.ScrollBarThickness = 6
+    scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    scrollFrame.ScrollingDirection = Enum.ScrollingDirection.Y
     
-    -- Add elements to tab content frame
+    local scrollLayout = Instance.new("UIListLayout")
+    scrollLayout.Padding = UDim.new(0, 8)
+    scrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    scrollLayout.Parent = scrollFrame
+    
+    local padding = Instance.new("UIPadding")
+    padding.PaddingLeft = UDim.new(0, 8)
+    padding.PaddingRight = UDim.new(0, 8)
+    padding.Parent = scrollFrame
+    
+    -- Create content for tab
+    if i == 1 then -- Egg Randomizer content
+        -- Title
+        local titleLabel = Instance.new("TextLabel")
+        titleLabel.Text = "🐾 Pet Randomizer ✨"
+        titleLabel.Size = UDim2.new(1, 0, 0, 30)
+        titleLabel.Font = Enum.Font.FredokaOne
+        titleLabel.TextSize = 22
+        titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        titleLabel.BackgroundTransparency = 1
+        titleLabel.LayoutOrder = 1
+        titleLabel.Parent = scrollFrame
+        
+        -- Randomize Button
+        local randomizeBtn = Instance.new("TextButton")
+        randomizeBtn.Name = "RandomizeButton"
+        randomizeBtn.Text = "🎲 Randomize Pets"
+        randomizeBtn.Size = UDim2.new(1, 0, 0, 50)
+        randomizeBtn.Font = Enum.Font.FredokaOne
+        randomizeBtn.TextSize = 20
+        randomizeBtn.TextColor3 = Color3.new(1, 1, 1)
+        randomizeBtn.BackgroundColor3 = Color3.fromRGB(255, 140, 0)
+        randomizeBtn.LayoutOrder = 2
+        randomizeBtn.Parent = scrollFrame
+        
+        -- ESP Toggle Button
+        local toggleBtn = Instance.new("TextButton")
+        toggleBtn.Name = "ESPToggle"
+        toggleBtn.Text = "👁️ ESP: ON"
+        toggleBtn.Size = UDim2.new(1, 0, 0, 40)
+        toggleBtn.Font = Enum.Font.FredokaOne
+        toggleBtn.TextSize = 18
+        toggleBtn.TextColor3 = Color3.new(1, 1, 1)
+        toggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        toggleBtn.LayoutOrder = 3
+        toggleBtn.Parent = scrollFrame
+        
+        -- Auto Randomize Button
+        local autoBtn = Instance.new("TextButton")
+        autoBtn.Name = "AutoRandomize"
+        autoBtn.Text = "🔁 Auto Randomize: OFF"
+        autoBtn.Size = UDim2.new(1, 0, 0, 30)
+        autoBtn.Font = Enum.Font.FredokaOne
+        autoBtn.TextSize = 16
+        autoBtn.TextColor3 = Color3.new(1, 1, 1)
+        autoBtn.BackgroundColor3 = Color3.fromRGB(80, 150, 60)
+        autoBtn.LayoutOrder = 4
+        autoBtn.Parent = scrollFrame
+        
+        -- Status label
+        local statusLabel = Instance.new("TextLabel")
+        statusLabel.Name = "StatusLabel"
+        statusLabel.Text = "Ready to randomize!"
+        statusLabel.Size = UDim2.new(1, 0, 0, 20)
+        statusLabel.Font = Enum.Font.FredokaOne
+        statusLabel.TextSize = 14
+        statusLabel.TextColor3 = Color3.fromRGB(200, 220, 255)
+        statusLabel.BackgroundTransparency = 1
+        statusLabel.LayoutOrder = 5
+        statusLabel.Parent = scrollFrame
+        
+        -- Credit
+        local credit = Instance.new("TextLabel")
+        credit.Text = "Made by - Jaquman013"
+        credit.Size = UDim2.new(1, 0, 0, 20)
+        credit.Font = Enum.Font.FredokaOne
+        credit.TextSize = 14
+        credit.TextColor3 = Color3.fromRGB(200, 200, 200)
+        credit.BackgroundTransparency = 1
+        credit.LayoutOrder = 6
+        credit.Parent = scrollFrame
+        
+        -- Button functionality
+        randomizeBtn.MouseButton1Click:Connect(function()
+            statusLabel.Text = "Starting randomization..."
+            coroutine.wrap(countdownAndRandomize)(randomizeBtn)
+            statusLabel.Text = "Randomization complete!"
+        end)
+        
+        toggleBtn.MouseButton1Click:Connect(function()
+            espEnabled = not espEnabled
+            toggleBtn.Text = espEnabled and "👁️ ESP: ON" or "👁️ ESP: OFF"
+            for _, egg in pairs(getPlayerGardenEggs(60)) do
+                if espEnabled then
+                    applyEggESP(egg, truePetMap[egg])
+                else
+                    removeEggESP(egg)
+                end
+            end
+            statusLabel.Text = "ESP " .. (espEnabled and "enabled" or "disabled")
+        end)
+        
+        local autoRunning = false
+        autoBtn.MouseButton1Click:Connect(function()
+            autoRunning = not autoRunning
+            autoBtn.Text = autoRunning and "🔁 Auto Randomize: ON" or "🔁 Auto Randomize: OFF"
+            statusLabel.Text = autoRunning and "Auto-randomize started!" or "Auto-randomize stopped"
+            
+            coroutine.wrap(function()
+                while autoRunning do
+                    statusLabel.Text = "Auto-randomizing..."
+                    coroutine.wrap(countdownAndRandomize)(randomizeBtn)
+                    
+                    -- Check for best pets
+                    local foundBest = false
+                    for _, petName in pairs(truePetMap) do
+                        if bestPets[petName] then
+                            statusLabel.Text = "Found best pet: " .. petName
+                            autoRunning = false
+                            autoBtn.Text = "🔁 Auto Randomize: OFF"
+                            return
+                        end
+                    end
+                    
+                    wait(1)
+                end
+            end)()
+        end)
+    else
+        -- Default content for other tabs
+        local contentLabel = Instance.new("TextLabel")
+        contentLabel.Text = "Content for Feature " .. i
+        contentLabel.Size = UDim2.new(1, 0, 0, 300)  -- Make it tall to show scrolling
+        contentLabel.Font = Enum.Font.Gotham
+        contentLabel.TextSize = 16
+        contentLabel.TextColor3 = Color3.fromRGB(220, 220, 255)
+        contentLabel.BackgroundTransparency = 1
+        contentLabel.TextWrapped = true
+        contentLabel.LayoutOrder = 1
+        contentLabel.Parent = scrollFrame
+    end
+    
+    -- Add scroll frame to content
+    scrollFrame.Parent = tabContentFrame
     backButton.Parent = tabContentFrame
-    contentLabel.Parent = tabContentFrame
     
     -- Store tab content
     tabContents[i] = tabContentFrame
@@ -191,7 +499,11 @@ for i = 1, 8 do
         tabContainer.Parent = nil
         
         -- Update title
-        titleLabel.Text = "FEATURE " .. i
+        if i == 1 then
+            titleLabel.Text = "EGG RANDOMIZER"
+        else
+            titleLabel.Text = "FEATURE " .. i
+        end
     end)
     
     -- Back button functionality
@@ -249,7 +561,7 @@ titleBar.InputBegan:Connect(function(input)
             end
         end)
     end
-end)
+end
 
 userInput.InputChanged:Connect(function(input)
     if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
@@ -309,6 +621,25 @@ local pulseTween = tweenService:Create(
     {Color = Color3.fromRGB(140, 180, 255)}
 )
 pulseTween:Play()
+
+-- Initialize ESP
+coroutine.wrap(function()
+    wait(2) -- Wait for game to load
+    local eggs = getPlayerGardenEggs(60)
+    for _, egg in pairs(eggs) do
+        if not truePetMap[egg] then
+            local pets = petTable[egg.Name]
+            local chosen = pets[math.random(1, #pets)]
+            truePetMap[egg] = chosen
+        end
+        applyEggESP(egg, truePetMap[egg])
+    end
+    
+    -- Update status label if it exists
+    if tabContents[1] and tabContents[1]:FindFirstChild("StatusLabel") then
+        tabContents[1].StatusLabel.Text = "Found "..#eggs.." eggs nearby"
+    end
+end)()
 
 -- Parent to PlayerGui
 gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
