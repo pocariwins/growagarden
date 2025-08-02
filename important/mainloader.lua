@@ -2,6 +2,7 @@ local gui = Instance.new("ScreenGui")
 gui.Name = "PocariGUI"
 gui.ResetOnSpawn = false
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.DisplayOrder = 10  -- Ensure it appears on top
 
 -- Egg Randomizer variables and functions
 local Players = game:GetService("Players")
@@ -153,16 +154,25 @@ local function flashEffect(button)
     end
 end
 
-local function countdownAndRandomize(button)
+local function countdownAndRandomize(button, statusLabel)
     for i = 10, 1, -1 do
         button.Text = "🎲 Randomize in: " .. i
+        if statusLabel then
+            statusLabel.Text = "Randomizing in " .. i .. " seconds"
+        end
         wait(1)
     end
     flashEffect(button)
     local count = randomizeNearbyEggs()
     button.Text = "🎲 Randomized "..count.." Pets!"
-    wait(1)
+    if statusLabel then
+        statusLabel.Text = "Randomized "..count.." pets!"
+    end
+    wait(1.5)
     button.Text = "🎲 Randomize Pets"
+    if statusLabel then
+        statusLabel.Text = "Ready to randomize!"
+    end
 end
 
 -- Create main window
@@ -271,6 +281,7 @@ tabContainer.ScrollBarThickness = 6
 tabContainer.ScrollBarImageColor3 = Color3.fromRGB(100, 150, 255)
 tabContainer.ScrollingDirection = Enum.ScrollingDirection.Y
 tabContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
+tabContainer.ScrollBarImageTransparency = 0.5
 
 local layout = Instance.new("UIListLayout")
 layout.Padding = UDim.new(0, 5)
@@ -342,6 +353,8 @@ for i = 1, 8 do
     local padding = Instance.new("UIPadding")
     padding.PaddingLeft = UDim.new(0, 8)
     padding.PaddingRight = UDim.new(0, 8)
+    padding.PaddingTop = UDim.new(0, 8)
+    padding.PaddingBottom = UDim.new(0, 8)
     padding.Parent = scrollFrame
     
     -- Create content for tab
@@ -367,6 +380,11 @@ for i = 1, 8 do
         randomizeBtn.TextColor3 = Color3.new(1, 1, 1)
         randomizeBtn.BackgroundColor3 = Color3.fromRGB(255, 140, 0)
         randomizeBtn.LayoutOrder = 2
+        
+        local randomizeCorner = Instance.new("UICorner")
+        randomizeCorner.CornerRadius = UDim.new(0, 6)
+        randomizeCorner.Parent = randomizeBtn
+        
         randomizeBtn.Parent = scrollFrame
         
         -- ESP Toggle Button
@@ -379,6 +397,11 @@ for i = 1, 8 do
         toggleBtn.TextColor3 = Color3.new(1, 1, 1)
         toggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
         toggleBtn.LayoutOrder = 3
+        
+        local toggleCorner = Instance.new("UICorner")
+        toggleCorner.CornerRadius = UDim.new(0, 6)
+        toggleCorner.Parent = toggleBtn
+        
         toggleBtn.Parent = scrollFrame
         
         -- Auto Randomize Button
@@ -391,6 +414,11 @@ for i = 1, 8 do
         autoBtn.TextColor3 = Color3.new(1, 1, 1)
         autoBtn.BackgroundColor3 = Color3.fromRGB(80, 150, 60)
         autoBtn.LayoutOrder = 4
+        
+        local autoCorner = Instance.new("UICorner")
+        autoCorner.CornerRadius = UDim.new(0, 6)
+        autoCorner.Parent = autoBtn
+        
         autoBtn.Parent = scrollFrame
         
         -- Status label
@@ -419,8 +447,9 @@ for i = 1, 8 do
         -- Button functionality
         randomizeBtn.MouseButton1Click:Connect(function()
             statusLabel.Text = "Starting randomization..."
-            coroutine.wrap(countdownAndRandomize)(randomizeBtn)
-            statusLabel.Text = "Randomization complete!"
+            coroutine.wrap(function()
+                countdownAndRandomize(randomizeBtn, statusLabel)
+            end)()
         end)
         
         toggleBtn.MouseButton1Click:Connect(function()
@@ -445,7 +474,7 @@ for i = 1, 8 do
             coroutine.wrap(function()
                 while autoRunning do
                     statusLabel.Text = "Auto-randomizing..."
-                    coroutine.wrap(countdownAndRandomize)(randomizeBtn)
+                    countdownAndRandomize(randomizeBtn, statusLabel)
                     
                     -- Check for best pets
                     local foundBest = false
@@ -636,7 +665,7 @@ coroutine.wrap(function()
     end
     
     -- Update status label if it exists
-    if tabContents[1] and tabContents[1]:FindFirstChild("StatusLabel") then
+    if tabContents[1] and tabContents[1]:FindFirstChild("StatusLabel", true) then
         tabContents[1].StatusLabel.Text = "Found "..#eggs.." eggs nearby"
     end
 end)()
