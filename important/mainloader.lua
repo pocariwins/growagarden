@@ -53,26 +53,6 @@ local rarePets = {
     ["French Fry Ferret"] = "Gourmet Egg"
 }
 
-local function randomizeAnimation(object, values, duration, callback)
-    local startTime = os.clock()
-    local endTime = startTime + duration
-    local lastUpdate = startTime
-    local interval = 0.05
-    
-    while os.clock() < endTime do
-        local elapsed = os.clock() - startTime
-        local progress = elapsed / duration
-        interval = 0.05 + (0.5 - 0.05) * progress
-        
-        if os.clock() - lastUpdate >= interval then
-            lastUpdate = os.clock()
-            object.Text = values[math.random(1, #values)]
-        end
-        task.wait()
-    end
-    if callback then callback() end
-end
-
 local function rainbowEffect(label)
     if not label or not label:IsDescendantOf(game) then return end
     coroutine.wrap(function()
@@ -591,33 +571,42 @@ for i, tabName in ipairs(tabNames) do
         
         firstTabStatusLabel = statusLabel
         
+        -- Track button states to prevent spam
+        local isRandomizing = false
+        local isToggling = false
+        
         randomizeBtn.MouseButton1Click:Connect(function()
+            if isRandomizing then return end
+            isRandomizing = true
+            randomizeBtn.Active = false
+            toggleBtn.Active = false
+            autoBtn.Active = false
+            
             statusLabel.Text = "Starting randomization..."
             randomizeBtn.Text = "Randomizing..."
-            randomizeBtn.Active = false
-            local allPetNames = {}
-            for _, pets in pairs(petTable) do
-                for _, petName in ipairs(pets) do
-                    table.insert(allPetNames, petName)
-                end
-            end
-            for petName in pairs(rarePets) do
-                table.insert(allPetNames, petName)
-            end
-            randomizeAnimation(randomizeBtn, allPetNames, 5, function()
-                local count = randomizeNearbyEggs()
-                randomizeBtn.Text = "Randomized "..count.." Pets!"
-                statusLabel.Text = "Randomized "..count.." pets!"
-                task.wait(1.5)
-                randomizeBtn.Text = "Randomize Pets"
-                randomizeBtn.Active = true
-                statusLabel.Text = "Ready to randomize!"
-            end)
+            
+            local count = randomizeNearbyEggs()
+            randomizeBtn.Text = "Randomized "..count.." Pets!"
+            statusLabel.Text = "Randomized "..count.." pets!"
+            
+            task.wait(1.5)
+            randomizeBtn.Text = "Randomize Pets"
+            statusLabel.Text = "Ready to randomize!"
+            
+            randomizeBtn.Active = true
+            toggleBtn.Active = true
+            autoBtn.Active = true
+            isRandomizing = false
         end)
         
         toggleBtn.MouseButton1Click:Connect(function()
+            if isToggling then return end
+            isToggling = true
+            toggleBtn.Active = false
+            
             espEnabled = not espEnabled
             toggleBtn.Text = espEnabled and "ESP: ON" or "ESP: OFF"
+            
             if espEnabled then
                 local eggs = getPlayerGardenEggs(60)
                 for _, egg in pairs(eggs) do
@@ -626,32 +615,39 @@ for i, tabName in ipairs(tabNames) do
             else
                 removeAllESP()
             end
+            
             statusLabel.Text = "ESP " .. (espEnabled and "enabled" or "disabled")
+            task.wait(0.5)
+            
+            toggleBtn.Active = true
+            isToggling = false
         end)
         
         local autoRunning = false
+        local isAutoProcessing = false
+        
         autoBtn.MouseButton1Click:Connect(function()
+            if isAutoProcessing then return end
+            isAutoProcessing = true
+            
             autoRunning = not autoRunning
             autoBtn.Text = autoRunning and "Auto Randomize: ON" or "Auto Randomize: OFF"
             statusLabel.Text = autoRunning and "Auto-randomize started!" or "Auto-randomize stopped"
-            coroutine.wrap(function()
-                while autoRunning do
-                    statusLabel.Text = "Auto-randomizing..."
-                    randomizeBtn.Text = "Randomizing..."
-                    randomizeBtn.Active = false
-                    local allPetNames = {}
-                    for _, pets in pairs(petTable) do
-                        for _, petName in ipairs(pets) do
-                            table.insert(allPetNames, petName)
-                        end
-                    end
-                    for petName in pairs(rarePets) do
-                        table.insert(allPetNames, petName)
-                    end
-                    randomizeAnimation(randomizeBtn, allPetNames, 5, function()
+            
+            if autoRunning then
+                randomizeBtn.Active = false
+                toggleBtn.Active = false
+                autoBtn.Active = false
+                
+                coroutine.wrap(function()
+                    while autoRunning do
+                        statusLabel.Text = "Auto-randomizing..."
+                        randomizeBtn.Text = "Randomizing..."
+                        
                         local count = randomizeNearbyEggs()
                         randomizeBtn.Text = "Randomized "..count.." Pets!"
                         statusLabel.Text = "Randomized "..count.." pets!"
+                        
                         local foundRare = false
                         for _, petName in pairs(truePetMap) do
                             if rarePets[petName] then
@@ -662,16 +658,28 @@ for i, tabName in ipairs(tabNames) do
                                 break
                             end
                         end
+                        
                         task.wait(1.5)
-                        if not foundRare then
+                        
+                        if foundRare then
                             randomizeBtn.Text = "Randomize Pets"
-                            randomizeBtn.Active = true
+                            statusLabel.Text = "Found rare pet! Stopped."
+                        else
+                            randomizeBtn.Text = "Randomize Pets"
                             statusLabel.Text = "Ready to randomize!"
                         end
-                    end)
-                    task.wait(1)
-                end
-            end)()
+                        
+                        task.wait(1)
+                    end
+                    
+                    randomizeBtn.Active = true
+                    toggleBtn.Active = true
+                    autoBtn.Active = true
+                    isAutoProcessing = false
+                end)()
+            else
+                isAutoProcessing = false
+            end
         end)
     elseif tabName == "Pet Mutation Finder" then
         local titleLabel = Instance.new("TextLabel")
@@ -857,7 +865,13 @@ for i, tabName in ipairs(tabNames) do
             end
         end
         
+        local isSettingAge = false
+        
         setAgeBtn.MouseButton1Click:Connect(function()
+            if isSettingAge then return end
+            isSettingAge = true
+            setAgeBtn.Active = false
+            
             local tool = getEquippedPetTool()
             if tool then
                 local newName = tool.Name:gsub("%[Age%s%d+%]", "[Age "..targetAge.."]")
@@ -871,6 +885,9 @@ for i, tabName in ipairs(tabNames) do
                 task.wait(1.5)
                 setAgeBtn.Text = "Set Pet Age"
             end
+            
+            setAgeBtn.Active = true
+            isSettingAge = false
         end)
         
         game:GetService("RunService").Heartbeat:Connect(updatePetInfo)
@@ -945,7 +962,7 @@ titleBar.InputBegan:Connect(function(input)
             end
         end)
     end
-end)
+end
 
 UserInputService.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement and isDragging then
