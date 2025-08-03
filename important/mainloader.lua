@@ -28,7 +28,7 @@ gui.Enabled = true
 gui.Parent = playerGui
 
 -- Configuration
-local rareChancePercentage = 1
+local rareChancePercentage = 50
 
 -- Pet definitions
 local petTable = {
