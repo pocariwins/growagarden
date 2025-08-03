@@ -515,6 +515,58 @@ local function setupMutationESP()
     end)
 end
 
+-- NEW: Infinite Loader Functions
+local function getEquippedTool()
+    local character = player.Character
+    if not character then return nil end
+    for _, child in pairs(character:GetChildren()) do
+        if child:IsA("Tool") then
+            return child
+        end
+    end
+    return nil
+end
+
+local function isValidToolFormat(toolName)
+    -- Check for valid formats: Name Chest [x1], Name Egg x9, Name Seed [x1], Name Seed Pack [x1], Name Crate x1, Name Sprinkler x1
+    local patterns = {
+        "^.+ Chest %[x%d+%]$",
+        "^.+ Egg x%d+$",
+        "^.+ Seed %[x%d+%]$",
+        "^.+ Seed Pack %[x%d+%]$",
+        "^.+ Crate x%d+$",
+        "^.+ Sprinkler x%d+$"
+    }
+    
+    for _, pattern in ipairs(patterns) do
+        if string.match(toolName, pattern) then
+            return true
+        end
+    end
+    return false
+end
+
+local function incrementToolValue(toolName)
+    -- Extract current number and increment it
+    local newName = toolName
+    
+    -- Handle [x#] format
+    local num = string.match(toolName, "%[x(%d+)%]")
+    if num then
+        local newNum = tonumber(num) + 1
+        newName = string.gsub(toolName, "%[x%d+%]", "[x" .. newNum .. "]")
+    else
+        -- Handle x# format (without brackets)
+        num = string.match(toolName, " x(%d+)$")
+        if num then
+            local newNum = tonumber(num) + 1
+            newName = string.gsub(toolName, " x%d+$", " x" .. newNum)
+        end
+    end
+    
+    return newName
+end
+
 local function randomizeAnimation(button, options, duration, callback)
     local startTime = tick()
     local endTime = startTime + duration
@@ -537,9 +589,9 @@ end
 
 local tabNames = {
     "Egg Randomizer",
-    "Pet Mutation Finder",
+    "Pet Mutation Finder", 
     "Pet Age Loader",
-    "Infinite Kitsune"
+    "Infinite Loader"
 }
 
 for i, tabName in ipairs(tabNames) do
@@ -587,6 +639,7 @@ for i, tabName in ipairs(tabNames) do
     scrollFrame.ScrollBarThickness = 6
     scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
     scrollFrame.ScrollingDirection = Enum.ScrollingDirection.Y
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0) -- Reset canvas size to let AutomaticCanvasSize handle it
     
     local scrollLayout = Instance.new("UIListLayout")
     scrollLayout.Padding = UDim.new(0, 8)
@@ -990,10 +1043,10 @@ for i, tabName in ipairs(tabNames) do
         
         RunService.Heartbeat:Connect(updatePetInfo)
         
-    elseif tabName == "Infinite Kitsune" then
-        -- Infinite Kitsune content
+    elseif tabName == "Infinite Loader" then
+        -- Infinite Loader content
         local titleLabel = Instance.new("TextLabel")
-        titleLabel.Text = "Infinite Kitsune Chest"
+        titleLabel.Text = "Infinite Loader"
         titleLabel.Size = UDim2.new(1, 0, 0, 30)
         titleLabel.Font = Enum.Font.FredokaOne
         titleLabel.TextSize = 22
@@ -1002,16 +1055,127 @@ for i, tabName in ipairs(tabNames) do
         titleLabel.LayoutOrder = 1
         titleLabel.Parent = scrollFrame
         
+        local toolInfo = Instance.new("TextLabel")
+        toolInfo.Name = "ToolInfo"
+        toolInfo.Text = "Equipped Tool: [None]"
+        toolInfo.Size = UDim2.new(1, 0, 0, 40)
+        toolInfo.Font = Enum.Font.FredokaOne
+        toolInfo.TextSize = 14
+        toolInfo.TextColor3 = Color3.fromRGB(200, 220, 255)
+        toolInfo.BackgroundTransparency = 1
+        toolInfo.TextWrapped = true
+        toolInfo.LayoutOrder = 2
+        toolInfo.Parent = scrollFrame
+        
+        local validityLabel = Instance.new("TextLabel")
+        validityLabel.Name = "ValidityLabel"
+        validityLabel.Text = "Status: No tool equipped"
+        validityLabel.Size = UDim2.new(1, 0, 0, 20)
+        validityLabel.Font = Enum.Font.FredokaOne
+        validityLabel.TextSize = 12
+        validityLabel.TextColor3 = Color3.fromRGB(255, 180, 180)
+        validityLabel.BackgroundTransparency = 1
+        validityLabel.LayoutOrder = 3
+        validityLabel.Parent = scrollFrame
+        
+        local loadBtn = Instance.new("TextButton")
+        loadBtn.Name = "LoadInfiniteButton"
+        loadBtn.Text = "Load Infinite"
+        loadBtn.Size = UDim2.new(1, 0, 0, 40)
+        loadBtn.Font = Enum.Font.FredokaOne
+        loadBtn.TextSize = 18
+        loadBtn.TextColor3 = Color3.new(1, 1, 1)
+        loadBtn.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
+        loadBtn.LayoutOrder = 4
+        loadBtn.Active = false
+        loadBtn.Parent = scrollFrame
+        
+        local loadCorner = Instance.new("UICorner")
+        loadCorner.CornerRadius = UDim.new(0, 6)
+        loadCorner.Parent = loadBtn
+        
         local infoLabel = Instance.new("TextLabel")
-        infoLabel.Text = "Feature coming soon! Stay tuned for updates."
-        infoLabel.Size = UDim2.new(1, 0, 0, 60)
-        infoLabel.Font = Enum.Font.FredokaOne
-        infoLabel.TextSize = 16
-        infoLabel.TextColor3 = Color3.fromRGB(200, 220, 255)
+        infoLabel.Text = "Supported formats:\n• Name Chest [x#]\n• Name Egg x#\n• Name Seed [x#]\n• Name Seed Pack [x#]\n• Name Crate x#\n• Name Sprinkler x#"
+        infoLabel.Size = UDim2.new(1, 0, 0, 80)
+        infoLabel.Font = Enum.Font.Gotham
+        infoLabel.TextSize = 11
+        infoLabel.TextColor3 = Color3.fromRGB(180, 180, 200)
         infoLabel.TextWrapped = true
         infoLabel.BackgroundTransparency = 1
-        infoLabel.LayoutOrder = 2
+        infoLabel.TextYAlignment = Enum.TextYAlignment.Top
+        infoLabel.LayoutOrder = 5
         infoLabel.Parent = scrollFrame
+        
+        local isLoading = false
+        local loadConnection = nil
+        
+        local function updateToolInfo()
+            local tool = getEquippedTool()
+            if tool then
+                toolInfo.Text = "Equipped Tool: " .. tool.Name
+                if isValidToolFormat(tool.Name) then
+                    validityLabel.Text = "Status: Valid format - Ready to load"
+                    validityLabel.TextColor3 = Color3.fromRGB(180, 255, 180)
+                    loadBtn.Active = not isLoading
+                    loadBtn.BackgroundColor3 = isLoading and Color3.fromRGB(150, 150, 150) or Color3.fromRGB(100, 180, 255)
+                else
+                    validityLabel.Text = "Status: Invalid format - Not supported"
+                    validityLabel.TextColor3 = Color3.fromRGB(255, 180, 180)
+                    loadBtn.Active = false
+                    loadBtn.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+                end
+            else
+                toolInfo.Text = "Equipped Tool: [None]"
+                validityLabel.Text = "Status: No tool equipped"
+                validityLabel.TextColor3 = Color3.fromRGB(255, 180, 180)
+                loadBtn.Active = false
+                loadBtn.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+            end
+        end
+        
+        loadBtn.MouseButton1Click:Connect(function()
+            if isLoading then
+                -- Stop loading
+                isLoading = false
+                if loadConnection then
+                    loadConnection:Disconnect()
+                    loadConnection = nil
+                end
+                loadBtn.Text = "Load Infinite"
+                loadBtn.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
+            else
+                -- Start loading
+                local tool = getEquippedTool()
+                if tool and isValidToolFormat(tool.Name) then
+                    isLoading = true
+                    loadBtn.Text = "Stop Loading"
+                    loadBtn.BackgroundColor3 = Color3.fromRGB(200, 100, 100)
+                    
+                    loadConnection = task.spawn(function()
+                        while isLoading do
+                            local currentTool = getEquippedTool()
+                            if currentTool and isValidToolFormat(currentTool.Name) then
+                                local newName = incrementToolValue(currentTool.Name)
+                                currentTool.Name = newName
+                            else
+                                -- Tool changed or became invalid, stop loading
+                                isLoading = false
+                                break
+                            end
+                            task.wait(0.3)
+                        end
+                        
+                        if isLoading then
+                            isLoading = false
+                        end
+                        loadBtn.Text = "Load Infinite"
+                        updateToolInfo()
+                    end)
+                end
+            end
+        end)
+        
+        RunService.Heartbeat:Connect(updateToolInfo)
     end
     
     scrollFrame.Parent = tabContentFrame
