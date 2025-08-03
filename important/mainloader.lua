@@ -3,6 +3,7 @@ gui.Name = "PocariGUI"
 gui.ResetOnSpawn = false
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.DisplayOrder = 10
+gui.Enabled = true
 
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
@@ -10,6 +11,9 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
+
+-- Create tweenService variable at the top level
+local tweenService = TweenService
 
 local petTable = {
     ["Common Egg"] = { "Dog", "Bunny", "Golden Lab" },
@@ -221,6 +225,7 @@ mainWindow.Size = UDim2.new(0, 320, 0, 240)
 mainWindow.Position = UDim2.new(0.5, -160, 0.5, -120)
 mainWindow.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 mainWindow.ClipsDescendants = true
+mainWindow.Visible = true
 
 local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 8)
@@ -326,6 +331,7 @@ tabContainer.ScrollBarImageColor3 = Color3.fromRGB(100, 150, 255)
 tabContainer.ScrollingDirection = Enum.ScrollingDirection.Y
 tabContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
 tabContainer.ScrollBarImageTransparency = 0.5
+tabContainer.Visible = true
 
 local layout = Instance.new("UIListLayout")
 layout.Padding = UDim.new(0, 5)
