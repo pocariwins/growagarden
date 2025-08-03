@@ -1,3 +1,4 @@
+-- Enhanced Infinite Loader Script with Persistence
 -- Wait for game to load properly
 repeat task.wait() until game:IsLoaded()
 
@@ -29,7 +30,13 @@ gui.Parent = playerGui
 
 -- Configuration
 local rareChancePercentage = 1
-local rareMutationChancePercentage = 15 -- NEW: Variable to control rare mutation likelihood
+local rareMutationChancePercentage = 15
+
+-- Global variables initialization
+local espEnabled = false
+local truePetMap = {}
+local trackedEggs = {}
+local toolTracker = {}
 
 -- Pet definitions
 local petTable = {
@@ -44,15 +51,11 @@ local petTable = {
     ["Anti Bee Egg"] = { "Wasp", "Moth", "Tarantula Hawk", "Butterfly", "Disco Bee" },
     ["Oasis Egg"] = { "Meerkat", "Sand Snake", "Axolotl", "Hyacinth Macaw", "Fennec Fox" },
     ["Paradise Egg"] = { "Ostrich", "Peacock", "Capybara", "Scarlet Macaw", "Mimic Octopus" },
-    ["Dinosaur Egg"] = { "Raptor", "Triceratops", "Stegosaurus", "Pterdactyl", "Brontosaurus", "T-Rex" },
+    ["Dinosaur Egg"] = { "Raptor", "Triceratops", "Stegosaurus", "Pterodactyl", "Brontosaurus", "T-Rex" },
     ["Primal Egg"] = { "Parasaurolophus", "Iguanodon", "Pachycephalosaurus", "Dilophosaurus", "Ankylosaurus", "Spinosaurus" },
     ["Zen Egg"] = { "Shiba Inu", "Nihonzaru", "Tanuki", "Tanchozuru", "Kappa", "Kitsune" },
     ["Gourmet Egg"] = { "Hot Dog", "Pizza Rat", "Burger Pup", "French Fry Ferret" }
 }
-
-local espEnabled = false
-local truePetMap = {}
-local trackedEggs = {}
 
 local rarePets = {
     ["Kitsune"] = "Zen Egg",
@@ -70,6 +73,118 @@ local rarePets = {
     ["French Fry Ferret"] = "Gourmet Egg"
 }
 
+local mutations = {
+    "Shiny", "Inverted", "Frozen", "Windy", "Golden", "Mega", "Tiny",
+    "Tranquil", "IronSkin", "Radiant", "Rainbow", "Shocked", "Ascended"
+}
+local currentMutation = mutations[math.random(#mutations)]
+local mutationEspEnabled = false
+local mutationEspGui, mutationEspLabel
+local mutationHue = 0
+
+-- Tool functions
+local function getEquippedTool()
+    local character = player.Character
+    if not character then return nil end
+    for _, child in pairs(character:GetChildren()) do
+        if child:IsA("Tool") then
+            return child
+        end
+    end
+    return nil
+end
+
+local function isValidToolFormat(toolName)
+    if not toolName then return false end
+    local patterns = {
+        "^.+ Chest %[x%d+%]$",
+        "^.+ Egg x%d+$",
+        "^.+ Seed %[x%d+%]$",
+        "^.+ Seed Pack %[x%d+%]$",
+        "^.+ Crate x%d+$",
+        "^.+ Sprinkler x%d+$"
+    }
+    
+    for _, pattern in ipairs(patterns) do
+        if string.match(toolName, pattern) then
+            return true
+        end
+    end
+    return false
+end
+
+local function extractToolValue(toolName)
+    if not toolName then return 0 end
+    local num = string.match(toolName, "%[x(%d+)%]")
+    if num then
+        return tonumber(num) or 0
+    else
+        num = string.match(toolName, " x(%d+)$")
+        if num then
+            return tonumber(num) or 0
+        end
+    end
+    return 0
+end
+
+local function setToolValue(toolName, value)
+    if not toolName or not value then return toolName end
+    local newName = toolName
+    
+    if string.match(toolName, "%[x%d+%]") then
+        newName = string.gsub(toolName, "%[x%d+%]", "[x" .. value .. "]")
+    else
+        if string.match(toolName, " x%d+$") then
+            newName = string.gsub(toolName, " x%d+$", " x" .. value)
+        end
+    end
+    
+    return newName
+end
+
+local function getToolBaseName(toolName)
+    if not toolName then return "" end
+    local baseName = toolName
+    baseName = string.gsub(baseName, " %[x%d+%]$", "")
+    baseName = string.gsub(baseName, " x%d+$", "")
+    return baseName
+end
+
+local function initializeToolTracker(tool)
+    if not tool then return nil end
+    local baseName = getToolBaseName(tool.Name)
+    local currentValue = extractToolValue(tool.Name)
+    
+    if not toolTracker[baseName] then
+        toolTracker[baseName] = {
+            initialValue = currentValue,
+            lastKnownValue = currentValue,
+            trackedIncrements = 0,
+            isTracking = false
+        }
+    end
+    
+    return toolTracker[baseName]
+end
+
+local function updateToolDisplay(tool, tracker)
+    if not tool or not tracker then return end
+    
+    local currentRealValue = extractToolValue(tool.Name)
+    local baseName = getToolBaseName(tool.Name)
+    
+    if currentRealValue < tracker.lastKnownValue and tracker.isTracking then
+        local displayValue = currentRealValue + tracker.trackedIncrements
+        tool.Name = setToolValue(tool.Name, displayValue)
+    elseif not tracker.isTracking then
+        if currentRealValue <= 0 then
+            toolTracker[baseName] = nil
+        end
+    end
+    
+    tracker.lastKnownValue = currentRealValue
+end
+
 -- Visual effects
 local function rainbowEffect(label)
     if not label or not label:IsDescendantOf(game) then return end
@@ -85,6 +200,7 @@ local function rainbowEffect(label)
 end
 
 local function glitchLabelEffect(label)
+    if not label then return end
     task.spawn(function()
         local original = label.TextColor3
         for i = 1, 2 do
@@ -100,8 +216,9 @@ local function glitchLabelEffect(label)
     end)
 end
 
--- Egg handling
+-- Egg handling functions
 local function getHatchState(eggModel)
+    if not eggModel then return false end
     local hatchReady = true
     local hatchTime = eggModel:FindFirstChild("HatchTime")
     local readyFlag = eggModel:FindFirstChild("ReadyToHatch")
@@ -113,8 +230,23 @@ local function getHatchState(eggModel)
     return hatchReady
 end
 
+local function selectPetForEgg(eggName)
+    local pets = petTable[eggName]
+    if not pets then return "Unknown" end
+    if math.random(1, 100) <= rareChancePercentage then
+        for petName, requiredEgg in pairs(rarePets) do
+            if requiredEgg == eggName then
+                return petName
+            end
+        end
+    end
+    return pets[math.random(1, #pets)]
+end
+
 local function applyEggESP(eggModel, petName)
+    if not eggModel or not petName then return end
     if trackedEggs[eggModel] then return end
+    
     local existingLabel = eggModel:FindFirstChild("PetBillboard", true)
     if existingLabel then existingLabel:Destroy() end
     local existingHighlight = eggModel:FindFirstChild("ESPHighlight")
@@ -172,14 +304,13 @@ local function applyEggESP(eggModel, petName)
 end
 
 local function removeEggESP(eggModel)
-    if trackedEggs[eggModel] then
-        for _, obj in ipairs(trackedEggs[eggModel]) do
-            if obj and obj.Parent then
-                obj:Destroy()
-            end
+    if not eggModel or not trackedEggs[eggModel] then return end
+    for _, obj in ipairs(trackedEggs[eggModel]) do
+        if obj and obj.Parent then
+            obj:Destroy()
         end
-        trackedEggs[eggModel] = nil
     end
+    trackedEggs[eggModel] = nil
 end
 
 local function removeAllESP()
@@ -191,19 +322,6 @@ local function removeAllESP()
         end
     end
     trackedEggs = {}
-end
-
-local function selectPetForEgg(eggName)
-    local pets = petTable[eggName]
-    if not pets then return "Unknown" end
-    if math.random(1, 100) <= rareChancePercentage then
-        for petName, requiredEgg in pairs(rarePets) do
-            if requiredEgg == eggName then
-                return petName
-            end
-        end
-    end
-    return pets[math.random(1, #pets)]
 end
 
 local function getPlayerGardenEggs(radius)
@@ -230,6 +348,7 @@ local function getPlayerGardenEggs(radius)
 end
 
 local function animateEggESP(eggModel, duration, finalPet)
+    if not eggModel or not duration or not finalPet then return end
     local billboard = trackedEggs[eggModel] and trackedEggs[eggModel][1]
     if not billboard then return end
     local label = billboard:FindFirstChild("TextLabel")
@@ -297,14 +416,86 @@ local function randomizeNearbyEggs()
     return #eggs
 end
 
-local function flashEffect(button)
-    local originalColor = button.BackgroundColor3
-    for i = 1, 3 do
-        button.BackgroundColor3 = Color3.new(1, 1, 1)
-        task.wait(0.05)
-        button.BackgroundColor3 = originalColor
-        task.wait(0.05)
+-- Mutation functions
+local function selectMutation()
+    local rareMutations = {"Rainbow", "Mega", "Ascended"}
+    local normalMutations = {"Shiny", "Inverted", "Frozen", "Windy", "Golden", "Tiny", "Tranquil", "IronSkin", "Radiant", "Shocked"}
+    
+    if math.random(1, 100) <= rareMutationChancePercentage then
+        return rareMutations[math.random(1, #rareMutations)]
+    else
+        return normalMutations[math.random(1, #normalMutations)]
     end
+end
+
+local function animateMutationESP(duration, finalMutation)
+    if not mutationEspEnabled or not mutationEspLabel or not duration or not finalMutation then return end
+    
+    local startTime = tick()
+    local endTime = startTime + duration
+    local lastUpdate = startTime
+    local interval = 0.05
+
+    while tick() < endTime do
+        local elapsed = tick() - startTime
+        local progress = elapsed / duration
+        interval = 0.05 + (0.3 - 0.05) * progress
+
+        if tick() - lastUpdate >= interval then
+            lastUpdate = tick()
+            pcall(function()
+                mutationEspLabel.Text = mutations[math.random(1, #mutations)]
+            end)
+        end
+        task.wait()
+    end
+
+    pcall(function()
+        mutationEspLabel.Text = finalMutation
+        currentMutation = finalMutation
+    end)
+end
+
+local function findMutationMachine()
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj:IsA("Model") and obj.Name:lower():find("mutation") then
+            return obj
+        end
+    end
+    return nil
+end
+
+local function setupMutationESP()
+    local machine = findMutationMachine()
+    if not machine then return end
+    local basePart = machine:FindFirstChildWhichIsA("BasePart")
+    if not basePart then return end
+    if mutationEspGui then mutationEspGui:Destroy() end
+    mutationEspGui = Instance.new("BillboardGui")
+    mutationEspGui.Name = "MutationESP"
+    mutationEspGui.Adornee = basePart
+    mutationEspGui.Size = UDim2.new(0, 200, 0, 40)
+    mutationEspGui.StudsOffset = Vector3.new(0, 3, 0)
+    mutationEspGui.AlwaysOnTop = true
+    mutationEspGui.Enabled = mutationEspEnabled
+    mutationEspGui.Parent = basePart
+    mutationEspLabel = Instance.new("TextLabel")
+    mutationEspLabel.Size = UDim2.new(1, 0, 1, 0)
+    mutationEspLabel.BackgroundTransparency = 1
+    mutationEspLabel.Font = Enum.Font.FredokaOne
+    mutationEspLabel.TextSize = 24
+    mutationEspLabel.TextStrokeTransparency = 0.3
+    mutationEspLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+    mutationEspLabel.Text = currentMutation
+    mutationEspLabel.Parent = mutationEspGui
+    RunService.RenderStepped:Connect(function()
+        if mutationEspEnabled and mutationEspLabel then
+            mutationHue = (mutationHue + 0.01) % 1
+            pcall(function()
+                mutationEspLabel.TextColor3 = Color3.fromHSV(mutationHue, 1, 1)
+            end)
+        end
+    end)
 end
 
 -- GUI Construction
@@ -423,209 +614,6 @@ layout.Parent = tabContainer
 local tabContents = {}
 local firstTabStatusLabel = nil
 
-local mutations = {
-    "Shiny", "Inverted", "Frozen", "Windy", "Golden", "Mega", "Tiny",
-    "Tranquil", "IronSkin", "Radiant", "Rainbow", "Shocked", "Ascended"
-}
-local currentMutation = mutations[math.random(#mutations)]
-local mutationEspEnabled = false
-local mutationEspGui, mutationEspLabel
-local mutationHue = 0
-
--- NEW: Function to select mutation with rare chance
-local function selectMutation()
-    local rareMutations = {"Rainbow", "Mega", "Ascended"}
-    local normalMutations = {"Shiny", "Inverted", "Frozen", "Windy", "Golden", "Tiny", "Tranquil", "IronSkin", "Radiant", "Shocked"}
-    
-    if math.random(1, 100) <= rareMutationChancePercentage then
-        return rareMutations[math.random(1, #rareMutations)]
-    else
-        return normalMutations[math.random(1, #normalMutations)]
-    end
-end
-
--- NEW: Function to animate mutation ESP
-local function animateMutationESP(duration, finalMutation)
-    if not mutationEspEnabled or not mutationEspLabel then return end
-    
-    local startTime = tick()
-    local endTime = startTime + duration
-    local lastUpdate = startTime
-    local interval = 0.05
-
-    while tick() < endTime do
-        local elapsed = tick() - startTime
-        local progress = elapsed / duration
-        interval = 0.05 + (0.3 - 0.05) * progress
-
-        if tick() - lastUpdate >= interval then
-            lastUpdate = tick()
-            pcall(function()
-                mutationEspLabel.Text = mutations[math.random(1, #mutations)]
-            end)
-        end
-        task.wait()
-    end
-
-    pcall(function()
-        mutationEspLabel.Text = finalMutation
-        currentMutation = finalMutation
-    end)
-end
-
-local function findMutationMachine()
-    for _, obj in pairs(Workspace:GetDescendants()) do
-        if obj:IsA("Model") and obj.Name:lower():find("mutation") then
-            return obj
-        end
-    end
-    return nil
-end
-
-local function setupMutationESP()
-    local machine = findMutationMachine()
-    if not machine then return end
-    local basePart = machine:FindFirstChildWhichIsA("BasePart")
-    if not basePart then return end
-    if mutationEspGui then mutationEspGui:Destroy() end
-    mutationEspGui = Instance.new("BillboardGui")
-    mutationEspGui.Name = "MutationESP"
-    mutationEspGui.Adornee = basePart
-    mutationEspGui.Size = UDim2.new(0, 200, 0, 40)
-    mutationEspGui.StudsOffset = Vector3.new(0, 3, 0)
-    mutationEspGui.AlwaysOnTop = true
-    mutationEspGui.Enabled = mutationEspEnabled
-    mutationEspGui.Parent = basePart
-    mutationEspLabel = Instance.new("TextLabel")
-    mutationEspLabel.Size = UDim2.new(1, 0, 1, 0)
-    mutationEspLabel.BackgroundTransparency = 1
-    mutationEspLabel.Font = Enum.Font.FredokaOne
-    mutationEspLabel.TextSize = 24
-    mutationEspLabel.TextStrokeTransparency = 0.3
-    mutationEspLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
-    mutationEspLabel.Text = currentMutation
-    mutationEspLabel.Parent = mutationEspGui
-    RunService.RenderStepped:Connect(function()
-        if mutationEspEnabled and mutationEspLabel then
-            mutationHue = (mutationHue + 0.01) % 1
-            pcall(function()
-                mutationEspLabel.TextColor3 = Color3.fromHSV(mutationHue, 1, 1)
-            end)
-        end
-    end)
-end
-
--- ENHANCED: Infinite Loader Functions with Persistence
-local toolTracker = {}
-
-local function getEquippedTool()
-    local character = player.Character
-    if not character then return nil end
-    for _, child in pairs(character:GetChildren()) do
-        if child:IsA("Tool") then
-            return child
-        end
-    end
-    return nil
-end
-
-local function isValidToolFormat(toolName)
-    -- Check for valid formats: Name Chest [x1], Name Egg x9, Name Seed [x1], Name Seed Pack [x1], Name Crate x1, Name Sprinkler x1
-    local patterns = {
-        "^.+ Chest %[x%d+%]$",
-        "^.+ Egg x%d+$",
-        "^.+ Seed %[x%d+%]$",
-        "^.+ Seed Pack %[x%d+%]$",
-        "^.+ Crate x%d+$",
-        "^.+ Sprinkler x%d+$"
-    }
-    
-    for _, pattern in ipairs(patterns) do
-        if string.match(toolName, pattern) then
-            return true
-        end
-    end
-    return false
-end
-
-local function extractToolValue(toolName)
-    -- Extract current number
-    local num = string.match(toolName, "%[x(%d+)%]")
-    if num then
-        return tonumber(num)
-    else
-        -- Handle x# format (without brackets)
-        num = string.match(toolName, " x(%d+)$")
-        if num then
-            return tonumber(num)
-        end
-    end
-    return 0
-end
-
-local function setToolValue(toolName, value)
-    -- Set tool value with proper formatting
-    local newName = toolName
-    
-    -- Handle [x#] format
-    if string.match(toolName, "%[x%d+%]") then
-        newName = string.gsub(toolName, "%[x%d+%]", "[x" .. value .. "]")
-    else
-        -- Handle x# format (without brackets)
-        if string.match(toolName, " x%d+$") then
-            newName = string.gsub(toolName, " x%d+$", " x" .. value)
-        end
-    end
-    
-    return newName
-end
-
-local function getToolBaseName(toolName)
-    -- Get tool name without the value part
-    local baseName = toolName
-    baseName = string.gsub(baseName, " %[x%d+%]$", "")
-    baseName = string.gsub(baseName, " x%d+$", "")
-    return baseName
-end
-
-local function initializeToolTracker(tool)
-    local baseName = getToolBaseName(tool.Name)
-    local currentValue = extractToolValue(tool.Name)
-    
-    if not toolTracker[baseName] then
-        toolTracker[baseName] = {
-            initialValue = currentValue,
-            lastKnownValue = currentValue,
-            trackedIncrements = 0,
-            isTracking = false
-        }
-    end
-    
-    return toolTracker[baseName]
-end
-
-local function updateToolDisplay(tool, tracker)
-    if not tool or not tracker then return end
-    
-    local currentRealValue = extractToolValue(tool.Name)
-    local baseName = getToolBaseName(tool.Name)
-    
-    -- Check if game deducted value
-    if currentRealValue < tracker.lastKnownValue and tracker.isTracking then
-        -- Game deducted, but we maintain our tracked increments
-        local displayValue = currentRealValue + tracker.trackedIncrements
-        tool.Name = setToolValue(tool.Name, displayValue)
-    elseif not tracker.isTracking then
-        -- Not tracking, check if real value changed (exhausted)
-        if currentRealValue <= 0 then
-            -- Tool exhausted, reset tracker
-            toolTracker[baseName] = nil
-        end
-    end
-    
-    tracker.lastKnownValue = currentRealValue
-end
-
 local tabNames = {
     "Egg Randomizer",
     "Pet Mutation Finder", 
@@ -694,7 +682,6 @@ for i, tabName in ipairs(tabNames) do
     
     -- Create tab content based on tab name
     if tabName == "Egg Randomizer" then
-        -- Egg Randomizer content
         local titleLabel = Instance.new("TextLabel")
         titleLabel.Text = "Pet Randomizer"
         titleLabel.Size = UDim2.new(1, 0, 0, 30)
@@ -874,7 +861,6 @@ for i, tabName in ipairs(tabNames) do
         end)
         
     elseif tabName == "Pet Mutation Finder" then
-        -- Pet Mutation Finder content
         local titleLabel = Instance.new("TextLabel")
         titleLabel.Text = "Pet Mutation Finder"
         titleLabel.Size = UDim2.new(1, 0, 0, 30)
@@ -919,10 +905,8 @@ for i, tabName in ipairs(tabNames) do
             rerollBtn.Text = "Rerolling..."
             rerollBtn.Active = false
             
-            -- Select the final mutation using the new function
             local finalMutation = selectMutation()
             
-            -- Animate the ESP instead of the button
             if mutationEspEnabled then
                 task.spawn(function()
                     animateMutationESP(3, finalMutation)
@@ -947,7 +931,6 @@ for i, tabName in ipairs(tabNames) do
         end)
         
     elseif tabName == "Pet Age Loader" then
-        -- Pet Age Loader content
         local titleLabel = Instance.new("TextLabel")
         titleLabel.Text = "Pet Age Loader"
         titleLabel.Size = UDim2.new(1, 0, 0, 30)
@@ -1083,7 +1066,7 @@ for i, tabName in ipairs(tabNames) do
         RunService.Heartbeat:Connect(updatePetInfo)
         
     elseif tabName == "Infinite Loader" then
-        -- ENHANCED Infinite Loader content with persistence and loading bar
+        -- ENHANCED Infinite Loader with persistence and loading bar
         local titleLabel = Instance.new("TextLabel")
         titleLabel.Text = "Infinite Loader"
         titleLabel.Size = UDim2.new(1, 0, 0, 30)
@@ -1117,7 +1100,7 @@ for i, tabName in ipairs(tabNames) do
         validityLabel.LayoutOrder = 3
         validityLabel.Parent = scrollFrame
         
-        -- NEW: Loading Bar Frame
+        -- Loading Bar Frame
         local loadingFrame = Instance.new("Frame")
         loadingFrame.Name = "LoadingFrame"
         loadingFrame.Size = UDim2.new(1, 0, 0, 30)
@@ -1297,7 +1280,9 @@ for i, tabName in ipairs(tabNames) do
                         
                         -- Initialize tracker
                         local tracker = initializeToolTracker(tool)
-                        tracker.isTracking = true
+                        if tracker then
+                            tracker.isTracking = true
+                        end
                         
                         isLoading = true
                         loadBtn.Text = "Stop Loading"
@@ -1361,3 +1346,145 @@ for i, tabName in ipairs(tabNames) do
         
         RunService.Heartbeat:Connect(updateToolInfo)
     end
+    
+    scrollFrame.Parent = tabContentFrame
+    backButton.Parent = tabContentFrame
+    
+    tabContents[i] = tabContentFrame
+    
+    tabButton.MouseButton1Click:Connect(function()
+        for _, content in ipairs(tabContents) do
+            content.Visible = false
+        end
+        tabContentFrame.Visible = true
+        tabContentFrame.Parent = contentFrame
+        tabContainer.Visible = false
+        tabContainer.Parent = nil
+        titleLabel.Text = tabName:upper()
+    end)
+    
+    backButton.MouseButton1Click:Connect(function()
+        for _, content in ipairs(tabContents) do
+            content.Visible = false
+            content.Parent = nil
+        end
+        tabContainer.Visible = true
+        tabContainer.Parent = contentFrame
+        titleLabel.Text = "POCARI'S EXPLOITS"
+    end)
+    
+    tabButton.Parent = tabContainer
+end
+
+tabContainer.Parent = contentFrame
+
+-- Dragging functionality
+local dragStart
+local startPos
+local isDragging = false
+
+titleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        isDragging = true
+        dragStart = input.Position
+        startPos = mainWindow.Position
+        local connection
+        connection = input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                isDragging = false
+                connection:Disconnect()
+            end
+        end)
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement and isDragging then
+        local delta = input.Position - dragStart
+        mainWindow.Position = UDim2.new(
+            startPos.X.Scale, 
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale, 
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+-- Minimize/Maximize functionality
+local minimized = false
+minimizeButton.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad)
+    if minimized then
+        TweenService:Create(mainWindow, tweenInfo, {Size = UDim2.new(0, 320, 0, 32)}):Play()
+        TweenService:Create(contentFrame, tweenInfo, {Size = UDim2.new(1, -16, 0, 0)}):Play()
+        TweenService:Create(watermark, tweenInfo, {TextTransparency = 1}):Play()
+        minimizeButton.Text = "+"
+    else
+        TweenService:Create(mainWindow, tweenInfo, {Size = UDim2.new(0, 320, 0, 240)}):Play()
+        TweenService:Create(contentFrame, tweenInfo, {Size = UDim2.new(1, -16, 1, -60)}):Play()
+        TweenService:Create(watermark, tweenInfo, {TextTransparency = 0}):Play()
+        minimizeButton.Text = "-"
+    end
+end)
+
+-- Close functionality
+closeButton.MouseButton1Click:Connect(function()
+    local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad)
+    TweenService:Create(mainWindow, tweenInfo, {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}):Play()
+    TweenService:Create(titleBar, tweenInfo, {BackgroundTransparency = 1}):Play()
+    task.wait(0.3)
+    gui:Destroy()
+end)
+
+-- Button hover effects
+minimizeButton.MouseEnter:Connect(function()
+    minimizeButton.BackgroundColor3 = Color3.fromRGB(120, 200, 255)
+end)
+
+minimizeButton.MouseLeave:Connect(function()
+    minimizeButton.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
+end)
+
+closeButton.MouseEnter:Connect(function()
+    closeButton.BackgroundColor3 = Color3.fromRGB(220, 80, 100)
+end)
+
+closeButton.MouseLeave:Connect(function()
+    closeButton.BackgroundColor3 = Color3.fromRGB(200, 60, 80)
+end)
+
+-- Initialize after everything is set up
+local function initializeAfterSetup()
+    -- Create pulse tween for border
+    if mainBorder then
+        local pulseTween = TweenService:Create(
+            mainBorder,
+            TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+            {Color = Color3.fromRGB(140, 180, 255)}
+        )
+        pulseTween:Play()
+    end
+
+    -- Scan for eggs after a short delay
+    task.spawn(function()
+        task.wait(2)
+        local eggs = getPlayerGardenEggs(60)
+        for _, egg in pairs(eggs) do
+            if not truePetMap[egg] then
+                truePetMap[egg] = selectPetForEgg(egg.Name)
+            end
+            if espEnabled then
+                applyEggESP(egg, truePetMap[egg])
+            end
+        end
+        if firstTabStatusLabel then
+            firstTabStatusLabel.Text = #eggs == 0 and "No eggs found nearby" or "Found "..#eggs.." eggs nearby"
+        end
+    end)
+end
+
+-- Initialize everything
+task.spawn(initializeAfterSetup)
+
+print("Pocari's Enhanced Pet GUI with Persistent Infinite Loader loaded successfully!")
