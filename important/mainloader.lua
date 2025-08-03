@@ -1,16 +1,31 @@
+-- Wait for the game to fully load before starting
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+-- Ensure core services are available
+local success, _ = pcall(function()
+    return game:GetService("Players")
+end)
+
+if not success then
+    repeat task.wait() until pcall(function() return game:GetService("Players") end)
+end
+
+-- Now safely create the GUI
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+-- Create ScreenGui
 local gui = Instance.new("ScreenGui")
 gui.Name = "PocariGUI"
 gui.ResetOnSpawn = false
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.DisplayOrder = 10
 gui.Enabled = true
-
-local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local player = Players.LocalPlayer
 
 if not player then
     player = Players:WaitForChild("LocalPlayer")
@@ -1068,12 +1083,10 @@ local function initializeAfterParenting()
 end
 
 -- Parent GUI to PlayerGui
+local player = Players.LocalPlayer
 if player then
     local playerGui = player:WaitForChild("PlayerGui")
     gui.Parent = playerGui
-    
-    -- Initialize tweens and scans after parenting
-    task.spawn(initializeAfterParenting)
 else
     warn("Player not found! GUI cannot be parented.")
 end
