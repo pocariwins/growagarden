@@ -16,25 +16,37 @@ local petTable = {
     ["Common Egg"] = { "Dog", "Bunny", "Golden Lab" },
     ["Uncommon Egg"] = { "Chicken", "Black Bunny", "Cat", "Deer" },
     ["Rare Egg"] = { "Pig", "Monkey", "Rooster", "Orange Tabby", "Spotted Deer" },
-    ["Legendary Egg"] = { "Cow", "Polar Bear", "Sea Otter", "Turtle", "Silver Monkey" },
-    ["Mythical Egg"] = { "Grey Mouse", "Brown Mouse", "Squirrel", "Red Giant Ant" },
-    ["Bug Egg"] = { "Snail", "Caterpillar", "Giant Ant", "Praying Mantis" },
+    ["Legendary Egg"] = { "Cow", "Sea Otter", "Turtle", "Silver Monkey", "Polar Bear" }, -- Added Polar Bear
+    ["Mythical Egg"] = { "Grey Mouse", "Brown Mouse", "Squirrel", "Red Giant Ant", "Red Fox" }, -- Added Red Fox
+    ["Bug Egg"] = { "Snail", "Caterpillar", "Giant Ant", "Praying Mantis", "Dragonfly" }, -- Added Dragonfly
     ["Night Egg"] = { "Frog", "Hedgehog", "Mole", "Echo Frog", "Night Owl" },
-    ["Bee Egg"] = { "Bee", "Honey Bee", "Bear Bee", "Petal Bee" },
-    ["Anti Bee Egg"] = { "Wasp", "Moth", "Tarantula Hawk" },
+    ["Bee Egg"] = { "Bee", "Honey Bee", "Bear Bee", "Petal Bee", "Queen Bee" }, -- Added Queen Bee
+    ["Anti Bee Egg"] = { "Wasp", "Moth", "Tarantula Hawk", "Butterfly", "Disco Bee" }, -- Added Butterfly and Disco Bee
     ["Oasis Egg"] = { "Meerkat", "Sand Snake", "Axolotl" },
-    ["Paradise Egg"] = { "Ostrich", "Peacock", "Capybara" },
-    ["Dinosaur Egg"] = { "Raptor", "Triceratops", "Stegosaurus" },
-    ["Primal Egg"] = { "Parasaurolophus", "Iguanodon", "Pachycephalosaurus" },
+    ["Paradise Egg"] = { "Ostrich", "Peacock", "Capybara", "Mimic Octopus" }, -- Added Mimic Octopus
+    ["Dinosaur Egg"] = { "Raptor", "Triceratops", "Stegosaurus", "T-Rex" }, -- Added T-Rex
+    ["Primal Egg"] = { "Parasaurolophus", "Iguanodon", "Pachycephalosaurus", "Spinosaurus" }, -- Added Spinosaurus
+    ["Zen Egg"] = { "Kitsune" } -- Added Zen Egg with Kitsune
 }
 
 -- ESP OFF BY DEFAULT
 local espEnabled = false
 local truePetMap = {}
+
+-- Define rare pets and their specific eggs
 local rarePets = {
-    "Kitsune", "T-Rex", "Spinosaurus", "Dragonfly", 
-    "Butterfly", "Disco Bee", "Queen Bee", "Red Fox", 
-    "Raccoon", "Fennec Fox", "Mimic Octopus", "Polar Bear"
+    ["Kitsune"] = "Zen Egg",
+    ["T-Rex"] = "Dinosaur Egg",
+    ["Spinosaurus"] = "Primal Egg",
+    ["Dragonfly"] = "Bug Egg",
+    ["Butterfly"] = "Anti Bee Egg",
+    ["Disco Bee"] = "Anti Bee Egg",
+    ["Queen Bee"] = "Bee Egg",
+    ["Red Fox"] = "Mythical Egg",
+    ["Raccoon"] = "Night Egg",
+    ["Fennec Fox"] = "Oasis Egg",
+    ["Mimic Octopus"] = "Paradise Egg",
+    ["Polar Bear"] = "Legendary Egg"
 }
 
 -- ADDED: Function for rainbow effect
@@ -93,7 +105,6 @@ local function applyEggESP(eggModel, petName)
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1, 0, 1, 0)
     label.BackgroundTransparency = 1
-    -- CHANGED: Format to [Egg Name] Pet Name
     label.Text = "[" .. eggModel.Name .. "] " .. petName
     if not hatchReady then
         label.Text = "[" .. eggModel.Name .. "] " .. petName .. " (Not Ready)"
@@ -108,25 +119,13 @@ local function applyEggESP(eggModel, petName)
     label.Parent = billboard
 
     -- Apply rainbow effect for rare pets
-    for _, rarePet in ipairs(rarePets) do
-        if petName == rarePet then
-            rainbowEffect(label)
-            break
-        end
+    if rarePets[petName] then
+        rainbowEffect(label)
     end
     
     -- Apply glitch effect for non-rare pets
-    if hatchReady then
-        local isRare = false
-        for _, rarePet in ipairs(rarePets) do
-            if petName == rarePet then
-                isRare = true
-                break
-            end
-        end
-        if not isRare then
-            glitchLabelEffect(label)
-        end
+    if hatchReady and not rarePets[petName] then
+        glitchLabelEffect(label)
     end
 
     local highlight = Instance.new("Highlight")
@@ -151,9 +150,15 @@ local function selectPetForEgg(eggName)
     local pets = petTable[eggName]
     if not pets then return "Unknown" end
     
-    -- CHANGED: 50% chance for rare pet (for testing)
+    -- 50% chance for rare pet (for testing)
     if math.random(1, 2) == 1 then
-        return rarePets[math.random(1, #rarePets)]
+        -- Check if this egg has any rare pets
+        for petName, requiredEgg in pairs(rarePets) do
+            if requiredEgg == eggName then
+                -- Only return this rare pet if it belongs to this egg
+                return petName
+            end
+        end
     end
     
     -- Normal selection
@@ -518,13 +523,12 @@ for i = 1, 8 do
                     -- Check for rare pets
                     local foundRare = false
                     for _, petName in pairs(truePetMap) do
-                        for _, rarePet in ipairs(rarePets) do
-                            if petName == rarePet then
-                                statusLabel.Text = "Found rare pet: " .. rarePet
-                                autoRunning = false
-                                autoBtn.Text = "Auto Randomize: OFF"
-                                return
-                            end
+                        if rarePets[petName] then
+                            foundRare = true
+                            statusLabel.Text = "Found rare pet: " .. petName
+                            autoRunning = false
+                            autoBtn.Text = "Auto Randomize: OFF"
+                            break
                         end
                     end
                     
