@@ -12,11 +12,8 @@ local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
--- Create tweenService variable at the top level
 local tweenService = TweenService
-
--- RARE CHANCE CONFIGURATION (percentage for rare pets and mutations)
-local rareChancePercentage = 1  -- 1% chance by default
+local rareChancePercentage = 1
 
 local petTable = {
     ["Common Egg"] = { "Dog", "Bunny", "Golden Lab" },
@@ -33,12 +30,12 @@ local petTable = {
     ["Dinosaur Egg"] = { "Raptor", "Triceratops", "Stegosaurus", "Pterodactyl", "Brontosaurus", "T-Rex" },
     ["Primal Egg"] = { "Parasaurolophus", "Iguanodon", "Pachycephalosaurus", "Dilophosaurus", "Ankylosaurus", "Spinosaurus" },
     ["Zen Egg"] = { "Shiba Inu", "Nihonzaru", "Tanuki", "Tanchozuru", "Kappa", "Kitsune" },
-    ["Gourmet Egg"] = { "Hot Dog", "Pizza Rat", "Burger Pup" }  -- Added Gourmet Egg
+    ["Gourmet Egg"] = { "Hot Dog", "Pizza Rat", "Burger Pup", "French Fry Ferret" }
 }
 
 local espEnabled = false
 local truePetMap = {}
-local trackedEggs = {} -- Track eggs with ESP applied
+local trackedEggs = {}
 
 local rarePets = {
     ["Kitsune"] = "Zen Egg",
@@ -53,39 +50,31 @@ local rarePets = {
     ["Fennec Fox"] = "Oasis Egg",
     ["Mimic Octopus"] = "Paradise Egg",
     ["Polar Bear"] = "Legendary Egg",
-    ["French Fry Ferret"] = "Gourmet Egg"  -- Added French Fry Ferret
+    ["French Fry Ferret"] = "Gourmet Egg"
 }
 
--- ANIMATION FUNCTIONS --
 local function randomizeAnimation(object, values, duration, callback)
     local startTime = os.clock()
     local endTime = startTime + duration
     local lastUpdate = startTime
-    local interval = 0.05  -- Start with fast updates
+    local interval = 0.05
     
-    -- Initial fast randomization
     while os.clock() < endTime do
         local elapsed = os.clock() - startTime
         local progress = elapsed / duration
-        
-        -- Gradually slow down the animation
-        interval = 0.05 + (0.5 - 0.05) * progress  -- Slow down from 50ms to 500ms
+        interval = 0.05 + (0.5 - 0.05) * progress
         
         if os.clock() - lastUpdate >= interval then
             lastUpdate = os.clock()
             object.Text = values[math.random(1, #values)]
         end
-        
         task.wait()
     end
-    
-    -- Final result
     if callback then callback() end
 end
 
 local function rainbowEffect(label)
     if not label or not label:IsDescendantOf(game) then return end
-    
     coroutine.wrap(function()
         local hue = 0
         while task.wait(0.03) and label and label:IsDescendantOf(game) do
@@ -107,9 +96,20 @@ local function glitchLabelEffect(label)
     end)()
 end
 
+local function getHatchState(eggModel)
+    local hatchReady = true
+    local hatchTime = eggModel:FindFirstChild("HatchTime")
+    local readyFlag = eggModel:FindFirstChild("ReadyToHatch")
+    if hatchTime and hatchTime:IsA("NumberValue") and hatchTime.Value > 0 then
+        hatchReady = false
+    elseif readyFlag and readyFlag:IsA("BoolValue") and not readyFlag.Value then
+        hatchReady = false
+    end
+    return hatchReady
+end
+
 local function applyEggESP(eggModel, petName)
-    if trackedEggs[eggModel] then return end -- Skip if already tracked
-    
+    if trackedEggs[eggModel] then return end
     local existingLabel = eggModel:FindFirstChild("PetBillboard", true)
     if existingLabel then existingLabel:Destroy() end
     local existingHighlight = eggModel:FindFirstChild("ESPHighlight")
@@ -119,19 +119,10 @@ local function applyEggESP(eggModel, petName)
     local basePart = eggModel:FindFirstChildWhichIsA("BasePart")
     if not basePart then return end
 
-    local hatchReady = true
-    local hatchTime = eggModel:FindFirstChild("HatchTime")
-    local readyFlag = eggModel:FindFirstChild("ReadyToHatch")
-
-    if hatchTime and hatchTime:IsA("NumberValue") and hatchTime.Value > 0 then
-        hatchReady = false
-    elseif readyFlag and readyFlag:IsA("BoolValue") and not readyFlag.Value then
-        hatchReady = false
-    end
-
+    local hatchReady = getHatchState(eggModel)
     local billboard = Instance.new("BillboardGui")
     billboard.Name = "PetBillboard"
-    billboard.Size = UDim2.new(0, 270, 0, 50)
+    billboard.Size = UDim2.new(0, 270, 0, 25)
     billboard.StudsOffset = Vector3.new(0, 4.5, 0)
     billboard.AlwaysOnTop = true
     billboard.MaxDistance = 500
@@ -140,23 +131,25 @@ local function applyEggESP(eggModel, petName)
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1, 0, 1, 0)
     label.BackgroundTransparency = 1
-    label.Text = "[" .. eggModel.Name .. "] " .. petName
+    label.Text = "["..eggModel.Name.."] "..petName
     if not hatchReady then
-        label.Text = "[" .. eggModel.Name .. "] " .. petName .. " (Not Ready)"
+        label.Text = "["..eggModel.Name.."] "..petName.." (Not Ready)"
         label.TextColor3 = Color3.fromRGB(160, 160, 160)
         label.TextStrokeTransparency = 0.5
     else
         label.TextColor3 = Color3.new(1, 1, 1)
         label.TextStrokeTransparency = 0
     end
-    label.TextScaled = true
+    label.TextScaled = false
+    label.TextSize = 18
+    label.TextWrapped = false
+    label.TextTruncate = Enum.TextTruncate.AtEnd
     label.Font = Enum.Font.FredokaOne
     label.Parent = billboard
 
     if rarePets[petName] then
         rainbowEffect(label)
     end
-    
     if hatchReady and not rarePets[petName] then
         glitchLabelEffect(label)
     end
@@ -198,8 +191,6 @@ end
 local function selectPetForEgg(eggName)
     local pets = petTable[eggName]
     if not pets then return "Unknown" end
-    
-    -- Use rareChancePercentage instead of fixed 1/1000
     if math.random(1, 100) <= rareChancePercentage then
         for petName, requiredEgg in pairs(rarePets) do
             if requiredEgg == eggName then
@@ -207,7 +198,6 @@ local function selectPetForEgg(eggName)
             end
         end
     end
-    
     return pets[math.random(1, #pets)]
 end
 
@@ -231,11 +221,64 @@ local function getPlayerGardenEggs(radius)
     return eggs
 end
 
+local function animateEggESP(eggModel, duration, finalPet)
+    local billboard = trackedEggs[eggModel] and trackedEggs[eggModel][1]
+    if not billboard then return end
+    local label = billboard:FindFirstChild("TextLabel")
+    if not label then return end
+
+    local eggName = eggModel.Name
+    local pets = petTable[eggName] or {}
+    local allPets = {}
+    for _, pet in ipairs(pets) do
+        table.insert(allPets, pet)
+    end
+    for petName, eggType in pairs(rarePets) do
+        if eggType == eggName then
+            table.insert(allPets, petName)
+        end
+    end
+
+    local hatchReady = getHatchState(eggModel)
+    local hatchString = hatchReady and "" or " (Not Ready)"
+    local startTime = os.clock()
+    local endTime = startTime + duration
+    local lastUpdate = startTime
+    local interval = 0.05
+
+    while os.clock() < endTime do
+        local elapsed = os.clock() - startTime
+        local progress = elapsed / duration
+        interval = 0.05 + (0.5 - 0.05) * progress
+
+        if os.clock() - lastUpdate >= interval then
+            lastUpdate = os.clock()
+            label.Text = "["..eggName.."] "..allPets[math.random(1, #allPets)]..hatchString
+        end
+        task.wait()
+    end
+
+    label.Text = "["..eggName.."] "..finalPet..hatchString
+    if rarePets[finalPet] then
+        rainbowEffect(label)
+    elseif hatchReady then
+        glitchLabelEffect(label)
+    end
+end
+
 local function randomizeNearbyEggs()
     local eggs = getPlayerGardenEggs(60)
     for _, egg in ipairs(eggs) do
-        truePetMap[egg] = selectPetForEgg(egg.Name)
-        applyEggESP(egg, truePetMap[egg])
+        local finalPet = selectPetForEgg(egg.Name)
+        truePetMap[egg] = finalPet
+        if espEnabled then
+            if not trackedEggs[egg] then
+                applyEggESP(egg, finalPet)
+            end
+            if trackedEggs[egg] then
+                coroutine.wrap(animateEggESP)(egg, 5, finalPet)
+            end
+        end
     end
     return #eggs
 end
@@ -250,28 +293,6 @@ local function flashEffect(button)
     end
 end
 
-local function countdownAndRandomize(button, statusLabel)
-    for i = 10, 1, -1 do
-        button.Text = "Randomize in: " .. i
-        if statusLabel then
-            statusLabel.Text = "Randomizing in " .. i .. " seconds"
-        end
-        task.wait(1)
-    end
-    flashEffect(button)
-    local count = randomizeNearbyEggs()
-    button.Text = "Randomized "..count.." Pets!"
-    if statusLabel then
-        statusLabel.Text = "Randomized "..count.." pets!"
-    end
-    task.wait(1.5)
-    button.Text = "Randomize Pets"
-    if statusLabel then
-        statusLabel.Text = "Ready to randomize!"
-    end
-end
-
--- Create main GUI container
 local mainWindow = Instance.new("Frame")
 mainWindow.Name = "MainFrame"
 mainWindow.Size = UDim2.new(0, 320, 0, 240)
@@ -290,7 +311,6 @@ mainBorder.Color = Color3.fromRGB(100, 150, 255)
 mainBorder.Thickness = 2
 mainBorder.Parent = mainWindow
 
--- Title bar
 local titleBar = Instance.new("Frame")
 titleBar.Name = "TitleBar"
 titleBar.Size = UDim2.new(1, 0, 0, 32)
@@ -313,7 +333,6 @@ titleLabel.Size = UDim2.new(0, 200, 1, 0)
 titleLabel.Position = UDim2.new(0, 12, 0, 0)
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
--- Close button
 local closeButton = Instance.new("TextButton")
 closeButton.Name = "CloseButton"
 closeButton.Text = "×"
@@ -329,7 +348,6 @@ local closeCorner = Instance.new("UICorner")
 closeCorner.CornerRadius = UDim.new(0, 6)
 closeCorner.Parent = closeButton
 
--- Minimize button
 local minimizeButton = Instance.new("TextButton")
 minimizeButton.Name = "MinimizeButton"
 minimizeButton.Text = "-"
@@ -346,7 +364,6 @@ minCorner.CornerRadius = UDim.new(0, 6)
 minCorner.Parent = minimizeButton
 minimizeButton.Parent = titleBar
 
--- Content frame
 local contentFrame = Instance.new("Frame")
 contentFrame.Name = "ContentFrame"
 contentFrame.BackgroundTransparency = 1
@@ -354,7 +371,6 @@ contentFrame.Size = UDim2.new(1, -16, 1, -60)
 contentFrame.Position = UDim2.new(0, 8, 0, 40)
 contentFrame.ClipsDescendants = true
 
--- Watermark
 local watermark = Instance.new("TextLabel")
 watermark.Name = "Watermark"
 watermark.Text = "created by pocari ;)"
@@ -366,7 +382,6 @@ watermark.Size = UDim2.new(1, 0, 0, 16)
 watermark.Position = UDim2.new(0, 0, 1, -16)
 watermark.TextYAlignment = Enum.TextYAlignment.Top
 
--- Assemble title bar
 closeButton.Parent = titleBar
 titleLabel.Parent = titleBar
 titleBar.Parent = mainWindow
@@ -374,7 +389,6 @@ watermark.Parent = mainWindow
 contentFrame.Parent = mainWindow
 mainWindow.Parent = gui
 
--- Tab container
 local tabContainer = Instance.new("ScrollingFrame")
 tabContainer.Name = "TabContainer"
 tabContainer.Size = UDim2.new(1, 0, 1, 0)
@@ -415,12 +429,9 @@ end
 local function setupMutationESP()
     local machine = findMutationMachine()
     if not machine then return end
-    
     local basePart = machine:FindFirstChildWhichIsA("BasePart")
     if not basePart then return end
-    
     if mutationEspGui then mutationEspGui:Destroy() end
-    
     mutationEspGui = Instance.new("BillboardGui")
     mutationEspGui.Name = "MutationESP"
     mutationEspGui.Adornee = basePart
@@ -429,7 +440,6 @@ local function setupMutationESP()
     mutationEspGui.AlwaysOnTop = true
     mutationEspGui.Enabled = mutationEspEnabled
     mutationEspGui.Parent = basePart
-    
     mutationEspLabel = Instance.new("TextLabel")
     mutationEspLabel.Size = UDim2.new(1, 0, 1, 0)
     mutationEspLabel.BackgroundTransparency = 1
@@ -439,7 +449,6 @@ local function setupMutationESP()
     mutationEspLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
     mutationEspLabel.Text = currentMutation
     mutationEspLabel.Parent = mutationEspGui
-    
     RunService.RenderStepped:Connect(function()
         if mutationEspEnabled then
             mutationHue = (mutationHue + 0.01) % 1
@@ -452,7 +461,7 @@ local tabNames = {
     "Egg Randomizer",
     "Pet Mutation Finder",
     "Pet Age Loader",
-    "Infinite Kitsune" -- Replaced Early Access with Kitsune Chest
+    "Infinite Kitsune"
 }
 
 for i, tabName in ipairs(tabNames) do
@@ -537,7 +546,6 @@ for i, tabName in ipairs(tabNames) do
         local randomizeCorner = Instance.new("UICorner")
         randomizeCorner.CornerRadius = UDim.new(0, 6)
         randomizeCorner.Parent = randomizeBtn
-        
         randomizeBtn.Parent = scrollFrame
         
         local toggleBtn = Instance.new("TextButton")
@@ -553,7 +561,6 @@ for i, tabName in ipairs(tabNames) do
         local toggleCorner = Instance.new("UICorner")
         toggleCorner.CornerRadius = UDim.new(0, 6)
         toggleCorner.Parent = toggleBtn
-        
         toggleBtn.Parent = scrollFrame
         
         local autoBtn = Instance.new("TextButton")
@@ -569,7 +576,6 @@ for i, tabName in ipairs(tabNames) do
         local autoCorner = Instance.new("UICorner")
         autoCorner.CornerRadius = UDim.new(0, 6)
         autoCorner.Parent = autoBtn
-        
         autoBtn.Parent = scrollFrame
         
         local statusLabel = Instance.new("TextLabel")
@@ -589,33 +595,23 @@ for i, tabName in ipairs(tabNames) do
             statusLabel.Text = "Starting randomization..."
             randomizeBtn.Text = "Randomizing..."
             randomizeBtn.Active = false
-            
-            -- Get all possible pet names for animation
             local allPetNames = {}
             for _, pets in pairs(petTable) do
                 for _, petName in ipairs(pets) do
                     table.insert(allPetNames, petName)
                 end
             end
-            
-            -- Add rare pets to the animation pool
             for petName in pairs(rarePets) do
                 table.insert(allPetNames, petName)
             end
-            
             randomizeAnimation(randomizeBtn, allPetNames, 5, function()
                 local count = randomizeNearbyEggs()
                 randomizeBtn.Text = "Randomized "..count.." Pets!"
-                if statusLabel then
-                    statusLabel.Text = "Randomized "..count.." pets!"
-                end
-                
+                statusLabel.Text = "Randomized "..count.." pets!"
                 task.wait(1.5)
                 randomizeBtn.Text = "Randomize Pets"
                 randomizeBtn.Active = true
-                if statusLabel then
-                    statusLabel.Text = "Ready to randomize!"
-                end
+                statusLabel.Text = "Ready to randomize!"
             end)
         end)
         
@@ -638,14 +634,11 @@ for i, tabName in ipairs(tabNames) do
             autoRunning = not autoRunning
             autoBtn.Text = autoRunning and "Auto Randomize: ON" or "Auto Randomize: OFF"
             statusLabel.Text = autoRunning and "Auto-randomize started!" or "Auto-randomize stopped"
-            
             coroutine.wrap(function()
                 while autoRunning do
                     statusLabel.Text = "Auto-randomizing..."
                     randomizeBtn.Text = "Randomizing..."
                     randomizeBtn.Active = false
-                    
-                    -- Animation for auto-randomize
                     local allPetNames = {}
                     for _, pets in pairs(petTable) do
                         for _, petName in ipairs(pets) do
@@ -655,14 +648,10 @@ for i, tabName in ipairs(tabNames) do
                     for petName in pairs(rarePets) do
                         table.insert(allPetNames, petName)
                     end
-                    
                     randomizeAnimation(randomizeBtn, allPetNames, 5, function()
                         local count = randomizeNearbyEggs()
                         randomizeBtn.Text = "Randomized "..count.." Pets!"
-                        if statusLabel then
-                            statusLabel.Text = "Randomized "..count.." pets!"
-                        end
-                        
+                        statusLabel.Text = "Randomized "..count.." pets!"
                         local foundRare = false
                         for _, petName in pairs(truePetMap) do
                             if rarePets[petName] then
@@ -673,7 +662,6 @@ for i, tabName in ipairs(tabNames) do
                                 break
                             end
                         end
-                        
                         task.wait(1.5)
                         if not foundRare then
                             randomizeBtn.Text = "Randomize Pets"
@@ -681,7 +669,6 @@ for i, tabName in ipairs(tabNames) do
                             statusLabel.Text = "Ready to randomize!"
                         end
                     end)
-                    
                     task.wait(1)
                 end
             end)()
@@ -730,12 +717,9 @@ for i, tabName in ipairs(tabNames) do
         rerollBtn.MouseButton1Click:Connect(function()
             rerollBtn.Text = "Rerolling..."
             rerollBtn.Active = false
-            
-            -- Weighted mutation selection (make Rainbow, Mega, Ascended less likely)
             local weightedMutations = {}
             for _, mutation in ipairs(mutations) do
                 if mutation == "Rainbow" or mutation == "Mega" or mutation == "Ascended" then
-                    -- Only add these 1/3 of the time
                     if math.random(1, 3) == 1 then
                         table.insert(weightedMutations, mutation)
                     end
@@ -743,15 +727,12 @@ for i, tabName in ipairs(tabNames) do
                     table.insert(weightedMutations, mutation)
                 end
             end
-            
             randomizeAnimation(rerollBtn, mutations, 5, function()
-                -- Final mutation selection with weights
                 if #weightedMutations > 0 then
                     currentMutation = weightedMutations[math.random(1, #weightedMutations)]
                 else
                     currentMutation = mutations[math.random(1, #mutations)]
                 end
-                
                 if mutationEspEnabled and mutationEspLabel then
                     mutationEspLabel.Text = currentMutation
                 end
@@ -894,7 +875,6 @@ for i, tabName in ipairs(tabNames) do
         
         game:GetService("RunService").Heartbeat:Connect(updatePetInfo)
     elseif tabName == "Infinite Kitsune" then
-        -- Removed functionality per request
         local titleLabel = Instance.new("TextLabel")
         titleLabel.Text = "Infinite Kitsune Chest"
         titleLabel.Size = UDim2.new(1, 0, 0, 30)
@@ -926,13 +906,10 @@ for i, tabName in ipairs(tabNames) do
         for _, content in ipairs(tabContents) do
             content.Visible = false
         end
-        
         tabContentFrame.Visible = true
         tabContentFrame.Parent = contentFrame
-        
         tabContainer.Visible = false
         tabContainer.Parent = nil
-        
         titleLabel.Text = tabName:upper()
     end)
     
@@ -941,10 +918,8 @@ for i, tabName in ipairs(tabNames) do
             content.Visible = false
             content.Parent = nil
         end
-        
         tabContainer.Visible = true
         tabContainer.Parent = contentFrame
-        
         titleLabel.Text = "POCARI'S EXPLOITS"
     end)
     
@@ -953,7 +928,6 @@ end
 
 tabContainer.Parent = contentFrame
 
--- Improved drag functionality
 local dragStart
 local startPos
 local isDragging = false
@@ -963,7 +937,6 @@ titleBar.InputBegan:Connect(function(input)
         isDragging = true
         dragStart = input.Position
         startPos = mainWindow.Position
-        
         local connection
         connection = input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
@@ -986,12 +959,10 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Minimize functionality
 local minimized = false
 minimizeButton.MouseButton1Click:Connect(function()
     minimized = not minimized
     local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad)
-    
     if minimized then
         tweenService:Create(mainWindow, tweenInfo, {Size = UDim2.new(0, 320, 0, 32)}):Play()
         tweenService:Create(contentFrame, tweenInfo, {Size = UDim2.new(1, -16, 0, 0)}):Play()
@@ -1005,7 +976,6 @@ minimizeButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Close functionality
 closeButton.MouseButton1Click:Connect(function()
     local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad)
     tweenService:Create(mainWindow, tweenInfo, {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}):Play()
@@ -1014,7 +984,6 @@ closeButton.MouseButton1Click:Connect(function()
     gui:Destroy()
 end)
 
--- Button hover effects
 minimizeButton.MouseEnter:Connect(function()
     minimizeButton.BackgroundColor3 = Color3.fromRGB(120, 200, 255)
 end)
@@ -1031,7 +1000,6 @@ closeButton.MouseLeave:Connect(function()
     closeButton.BackgroundColor3 = Color3.fromRGB(200, 60, 80)
 end)
 
--- Pulse animation for border
 local pulseTween = tweenService:Create(
     mainBorder,
     TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
@@ -1039,7 +1007,6 @@ local pulseTween = tweenService:Create(
 )
 pulseTween:Play()
 
--- Initialization coroutine
 coroutine.wrap(function()
     task.wait(2)
     local eggs = getPlayerGardenEggs(60)
@@ -1051,7 +1018,6 @@ coroutine.wrap(function()
             applyEggESP(egg, truePetMap[egg])
         end
     end
-    
     if firstTabStatusLabel then
         if #eggs == 0 then
             firstTabStatusLabel.Text = "No eggs found nearby"
@@ -1061,6 +1027,5 @@ coroutine.wrap(function()
     end
 end)()
 
--- Parent GUI to player's PlayerGui
 local playerGui = player:WaitForChild("PlayerGui")
 gui.Parent = playerGui
