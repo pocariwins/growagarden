@@ -15,6 +15,9 @@ local player = Players.LocalPlayer
 -- Create tweenService variable at the top level
 local tweenService = TweenService
 
+-- RARE CHANCE CONFIGURATION (percentage for rare pets and mutations)
+local rareChancePercentage = 1  -- 1% chance by default
+
 local petTable = {
     ["Common Egg"] = { "Dog", "Bunny", "Golden Lab" },
     ["Uncommon Egg"] = { "Chicken", "Black Bunny", "Cat", "Deer" },
@@ -29,7 +32,8 @@ local petTable = {
     ["Paradise Egg"] = { "Ostrich", "Peacock", "Capybara", "Scarlet Macaw", "Mimic Octopus" },
     ["Dinosaur Egg"] = { "Raptor", "Triceratops", "Stegosaurus", "Pterodactyl", "Brontosaurus", "T-Rex" },
     ["Primal Egg"] = { "Parasaurolophus", "Iguanodon", "Pachycephalosaurus", "Dilophosaurus", "Ankylosaurus", "Spinosaurus" },
-    ["Zen Egg"] = { "Shiba Inu", "Nihonzaru", "Tanuki", "Tanchozuru", "Kappa", "Kitsune" }
+    ["Zen Egg"] = { "Shiba Inu", "Nihonzaru", "Tanuki", "Tanchozuru", "Kappa", "Kitsune" },
+    ["Gourmet Egg"] = { "Hot Dog", "Pizza Rat", "Burger Pup" }  -- Added Gourmet Egg
 }
 
 local espEnabled = false
@@ -48,8 +52,36 @@ local rarePets = {
     ["Raccoon"] = "Night Egg",
     ["Fennec Fox"] = "Oasis Egg",
     ["Mimic Octopus"] = "Paradise Egg",
-    ["Polar Bear"] = "Legendary Egg"
+    ["Polar Bear"] = "Legendary Egg",
+    ["French Fry Ferret"] = "Gourmet Egg"  -- Added French Fry Ferret
 }
+
+-- ANIMATION FUNCTIONS --
+local function randomizeAnimation(object, values, duration, callback)
+    local startTime = os.clock()
+    local endTime = startTime + duration
+    local lastUpdate = startTime
+    local interval = 0.05  -- Start with fast updates
+    
+    -- Initial fast randomization
+    while os.clock() < endTime do
+        local elapsed = os.clock() - startTime
+        local progress = elapsed / duration
+        
+        -- Gradually slow down the animation
+        interval = 0.05 + (0.5 - 0.05) * progress  -- Slow down from 50ms to 500ms
+        
+        if os.clock() - lastUpdate >= interval then
+            lastUpdate = os.clock()
+            object.Text = values[math.random(1, #values)]
+        end
+        
+        task.wait()
+    end
+    
+    -- Final result
+    if callback then callback() end
+end
 
 local function rainbowEffect(label)
     if not label or not label:IsDescendantOf(game) then return end
@@ -167,7 +199,8 @@ local function selectPetForEgg(eggName)
     local pets = petTable[eggName]
     if not pets then return "Unknown" end
     
-    if math.random(1, 1000) == 1 then
+    -- Use rareChancePercentage instead of fixed 1/1000
+    if math.random(1, 100) <= rareChancePercentage then
         for petName, requiredEgg in pairs(rarePets) do
             if requiredEgg == eggName then
                 return petName
@@ -554,9 +587,36 @@ for i, tabName in ipairs(tabNames) do
         
         randomizeBtn.MouseButton1Click:Connect(function()
             statusLabel.Text = "Starting randomization..."
-            coroutine.wrap(function()
-                countdownAndRandomize(randomizeBtn, statusLabel)
-            end)()
+            randomizeBtn.Text = "Randomizing..."
+            randomizeBtn.Active = false
+            
+            -- Get all possible pet names for animation
+            local allPetNames = {}
+            for _, pets in pairs(petTable) do
+                for _, petName in ipairs(pets) do
+                    table.insert(allPetNames, petName)
+                end
+            end
+            
+            -- Add rare pets to the animation pool
+            for petName in pairs(rarePets) do
+                table.insert(allPetNames, petName)
+            end
+            
+            randomizeAnimation(randomizeBtn, allPetNames, 5, function()
+                local count = randomizeNearbyEggs()
+                randomizeBtn.Text = "Randomized "..count.." Pets!"
+                if statusLabel then
+                    statusLabel.Text = "Randomized "..count.." pets!"
+                end
+                
+                task.wait(1.5)
+                randomizeBtn.Text = "Randomize Pets"
+                randomizeBtn.Active = true
+                if statusLabel then
+                    statusLabel.Text = "Ready to randomize!"
+                end
+            end)
         end)
         
         toggleBtn.MouseButton1Click:Connect(function()
@@ -582,18 +642,45 @@ for i, tabName in ipairs(tabNames) do
             coroutine.wrap(function()
                 while autoRunning do
                     statusLabel.Text = "Auto-randomizing..."
-                    countdownAndRandomize(randomizeBtn, statusLabel)
+                    randomizeBtn.Text = "Randomizing..."
+                    randomizeBtn.Active = false
                     
-                    local foundRare = false
-                    for _, petName in pairs(truePetMap) do
-                        if rarePets[petName] then
-                            foundRare = true
-                            statusLabel.Text = "Found rare pet: " .. petName
-                            autoRunning = false
-                            autoBtn.Text = "Auto Randomize: OFF"
-                            break
+                    -- Animation for auto-randomize
+                    local allPetNames = {}
+                    for _, pets in pairs(petTable) do
+                        for _, petName in ipairs(pets) do
+                            table.insert(allPetNames, petName)
                         end
                     end
+                    for petName in pairs(rarePets) do
+                        table.insert(allPetNames, petName)
+                    end
+                    
+                    randomizeAnimation(randomizeBtn, allPetNames, 5, function()
+                        local count = randomizeNearbyEggs()
+                        randomizeBtn.Text = "Randomized "..count.." Pets!"
+                        if statusLabel then
+                            statusLabel.Text = "Randomized "..count.." pets!"
+                        end
+                        
+                        local foundRare = false
+                        for _, petName in pairs(truePetMap) do
+                            if rarePets[petName] then
+                                foundRare = true
+                                statusLabel.Text = "Found rare pet: " .. petName
+                                autoRunning = false
+                                autoBtn.Text = "Auto Randomize: OFF"
+                                break
+                            end
+                        end
+                        
+                        task.wait(1.5)
+                        if not foundRare then
+                            randomizeBtn.Text = "Randomize Pets"
+                            randomizeBtn.Active = true
+                            statusLabel.Text = "Ready to randomize!"
+                        end
+                    end)
                     
                     task.wait(1)
                 end
@@ -641,10 +728,36 @@ for i, tabName in ipairs(tabNames) do
         toggleBtn.Parent = scrollFrame
         
         rerollBtn.MouseButton1Click:Connect(function()
-            currentMutation = mutations[math.random(#mutations)]
-            if mutationEspEnabled and mutationEspLabel then
-                mutationEspLabel.Text = currentMutation
+            rerollBtn.Text = "Rerolling..."
+            rerollBtn.Active = false
+            
+            -- Weighted mutation selection (make Rainbow, Mega, Ascended less likely)
+            local weightedMutations = {}
+            for _, mutation in ipairs(mutations) do
+                if mutation == "Rainbow" or mutation == "Mega" or mutation == "Ascended" then
+                    -- Only add these 1/3 of the time
+                    if math.random(1, 3) == 1 then
+                        table.insert(weightedMutations, mutation)
+                    end
+                else
+                    table.insert(weightedMutations, mutation)
+                end
             end
+            
+            randomizeAnimation(rerollBtn, mutations, 5, function()
+                -- Final mutation selection with weights
+                if #weightedMutations > 0 then
+                    currentMutation = weightedMutations[math.random(1, #weightedMutations)]
+                else
+                    currentMutation = mutations[math.random(1, #mutations)]
+                end
+                
+                if mutationEspEnabled and mutationEspLabel then
+                    mutationEspLabel.Text = currentMutation
+                end
+                rerollBtn.Text = "Reroll Mutation"
+                rerollBtn.Active = true
+            end)
         end)
         
         toggleBtn.MouseButton1Click:Connect(function()
@@ -781,6 +894,7 @@ for i, tabName in ipairs(tabNames) do
         
         game:GetService("RunService").Heartbeat:Connect(updatePetInfo)
     elseif tabName == "Infinite Kitsune" then
+        -- Removed functionality per request
         local titleLabel = Instance.new("TextLabel")
         titleLabel.Text = "Infinite Kitsune Chest"
         titleLabel.Size = UDim2.new(1, 0, 0, 30)
@@ -792,7 +906,7 @@ for i, tabName in ipairs(tabNames) do
         titleLabel.Parent = scrollFrame
         
         local infoLabel = Instance.new("TextLabel")
-        infoLabel.Text = "Spawn infinite Kitsune chests in your garden!"
+        infoLabel.Text = "Feature coming soon! Stay tuned for updates."
         infoLabel.Size = UDim2.new(1, 0, 0, 60)
         infoLabel.Font = Enum.Font.FredokaOne
         infoLabel.TextSize = 16
@@ -801,60 +915,6 @@ for i, tabName in ipairs(tabNames) do
         infoLabel.BackgroundTransparency = 1
         infoLabel.LayoutOrder = 2
         infoLabel.Parent = scrollFrame
-        
-        local spawnBtn = Instance.new("TextButton")
-        spawnBtn.Name = "SpawnButton"
-        spawnBtn.Text = "Spawn Kitsune Chest"
-        spawnBtn.Size = UDim2.new(1, 0, 0, 50)
-        spawnBtn.Font = Enum.Font.FredokaOne
-        spawnBtn.TextSize = 20
-        spawnBtn.TextColor3 = Color3.new(1, 1, 1)
-        spawnBtn.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
-        spawnBtn.LayoutOrder = 3
-        spawnBtn.Parent = scrollFrame
-        
-        local spawnCorner = Instance.new("UICorner")
-        spawnCorner.CornerRadius = UDim.new(0, 6)
-        spawnCorner.Parent = spawnBtn
-        
-        spawnBtn.MouseButton1Click:Connect(function()
-            local character = player.Character
-            if not character then return end
-            
-            local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-            if not humanoidRootPart then return end
-            
-            -- Create a chest model
-            local chest = Instance.new("Model")
-            chest.Name = "KitsuneChest"
-            
-            local mainPart = Instance.new("Part")
-            mainPart.Name = "ChestBase"
-            mainPart.Size = Vector3.new(5, 3, 5)
-            mainPart.Position = humanoidRootPart.Position + humanoidRootPart.CFrame.LookVector * 8
-            mainPart.Anchored = true
-            mainPart.CanCollide = true
-            mainPart.Color = Color3.fromRGB(255, 165, 0) -- Orange color
-            mainPart.Parent = chest
-            
-            local topPart = Instance.new("Part")
-            topPart.Name = "ChestLid"
-            topPart.Size = Vector3.new(4.9, 0.5, 4.9)
-            topPart.Position = mainPart.Position + Vector3.new(0, 1.75, 0)
-            topPart.Anchored = true
-            topPart.CanCollide = true
-            topPart.Color = Color3.fromRGB(200, 120, 0) -- Darker orange
-            topPart.Parent = chest
-            
-            local clickDetector = Instance.new("ClickDetector")
-            clickDetector.Parent = mainPart
-            
-            chest.Parent = workspace
-            
-            spawnBtn.Text = "Chest Spawned!"
-            task.wait(1.5)
-            spawnBtn.Text = "Spawn Kitsune Chest"
-        end)
     end
     
     scrollFrame.Parent = tabContentFrame
