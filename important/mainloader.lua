@@ -34,6 +34,7 @@ local petTable = {
 
 local espEnabled = false
 local truePetMap = {}
+local trackedEggs = {} -- Track eggs with ESP applied
 
 local rarePets = {
     ["Kitsune"] = "Zen Egg",
@@ -75,6 +76,8 @@ local function glitchLabelEffect(label)
 end
 
 local function applyEggESP(eggModel, petName)
+    if trackedEggs[eggModel] then return end -- Skip if already tracked
+    
     local existingLabel = eggModel:FindFirstChild("PetBillboard", true)
     if existingLabel then existingLabel:Destroy() end
     local existingHighlight = eggModel:FindFirstChild("ESPHighlight")
@@ -134,13 +137,30 @@ local function applyEggESP(eggModel, petName)
     highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
     highlight.Adornee = eggModel
     highlight.Parent = eggModel
+    
+    trackedEggs[eggModel] = {billboard, highlight}
 end
 
 local function removeEggESP(eggModel)
-    local label = eggModel:FindFirstChild("PetBillboard", true)
-    if label then label:Destroy() end
-    local highlight = eggModel:FindFirstChild("ESPHighlight")
-    if highlight then highlight:Destroy() end
+    if trackedEggs[eggModel] then
+        for _, obj in ipairs(trackedEggs[eggModel]) do
+            if obj and obj.Parent then
+                obj:Destroy()
+            end
+        end
+        trackedEggs[eggModel] = nil
+    end
+end
+
+local function removeAllESP()
+    for eggModel, espObjects in pairs(trackedEggs) do
+        for _, obj in ipairs(espObjects) do
+            if obj and obj.Parent then
+                obj:Destroy()
+            end
+        end
+    end
+    trackedEggs = {}
 end
 
 local function selectPetForEgg(eggName)
@@ -399,7 +419,7 @@ local tabNames = {
     "Egg Randomizer",
     "Pet Mutation Finder",
     "Pet Age Loader",
-    "Update Early Access"
+    "Infinite Kitsune" -- Replaced Early Access with Kitsune Chest
 }
 
 for i, tabName in ipairs(tabNames) do
@@ -542,12 +562,13 @@ for i, tabName in ipairs(tabNames) do
         toggleBtn.MouseButton1Click:Connect(function()
             espEnabled = not espEnabled
             toggleBtn.Text = espEnabled and "ESP: ON" or "ESP: OFF"
-            for _, egg in pairs(getPlayerGardenEggs(60)) do
-                if espEnabled then
+            if espEnabled then
+                local eggs = getPlayerGardenEggs(60)
+                for _, egg in pairs(eggs) do
                     applyEggESP(egg, truePetMap[egg])
-                else
-                    removeEggESP(egg)
                 end
+            else
+                removeAllESP()
             end
             statusLabel.Text = "ESP " .. (espEnabled and "enabled" or "disabled")
         end)
@@ -759,9 +780,9 @@ for i, tabName in ipairs(tabNames) do
         end)
         
         game:GetService("RunService").Heartbeat:Connect(updatePetInfo)
-    elseif tabName == "Update Early Access" then
+    elseif tabName == "Infinite Kitsune" then
         local titleLabel = Instance.new("TextLabel")
-        titleLabel.Text = "Update Early Access"
+        titleLabel.Text = "Infinite Kitsune Chest"
         titleLabel.Size = UDim2.new(1, 0, 0, 30)
         titleLabel.Font = Enum.Font.FredokaOne
         titleLabel.TextSize = 22
@@ -771,7 +792,7 @@ for i, tabName in ipairs(tabNames) do
         titleLabel.Parent = scrollFrame
         
         local infoLabel = Instance.new("TextLabel")
-        infoLabel.Text = "Get early access to upcoming features and updates!"
+        infoLabel.Text = "Spawn infinite Kitsune chests in your garden!"
         infoLabel.Size = UDim2.new(1, 0, 0, 60)
         infoLabel.Font = Enum.Font.FredokaOne
         infoLabel.TextSize = 16
@@ -781,32 +802,58 @@ for i, tabName in ipairs(tabNames) do
         infoLabel.LayoutOrder = 2
         infoLabel.Parent = scrollFrame
         
-        local accessBtn = Instance.new("TextButton")
-        accessBtn.Name = "AccessButton"
-        accessBtn.Text = "Get Early Access"
-        accessBtn.Size = UDim2.new(1, 0, 0, 50)
-        accessBtn.Font = Enum.Font.FredokaOne
-        accessBtn.TextSize = 20
-        accessBtn.TextColor3 = Color3.new(1, 1, 1)
-        accessBtn.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
-        accessBtn.LayoutOrder = 3
-        accessBtn.Parent = scrollFrame
+        local spawnBtn = Instance.new("TextButton")
+        spawnBtn.Name = "SpawnButton"
+        spawnBtn.Text = "Spawn Kitsune Chest"
+        spawnBtn.Size = UDim2.new(1, 0, 0, 50)
+        spawnBtn.Font = Enum.Font.FredokaOne
+        spawnBtn.TextSize = 20
+        spawnBtn.TextColor3 = Color3.new(1, 1, 1)
+        spawnBtn.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
+        spawnBtn.LayoutOrder = 3
+        spawnBtn.Parent = scrollFrame
         
-        local accessCorner = Instance.new("UICorner")
-        accessCorner.CornerRadius = UDim.new(0, 6)
-        accessCorner.Parent = accessBtn
+        local spawnCorner = Instance.new("UICorner")
+        spawnCorner.CornerRadius = UDim.new(0, 6)
+        spawnCorner.Parent = spawnBtn
         
-        accessBtn.MouseButton1Click:Connect(function()
-            local updateService = game:GetService("ReplicatedStorage"):FindFirstChild("Modules")
-            if updateService then
-                local corruptedZen = updateService:FindFirstChild("Corrupted Zen")
-                if corruptedZen then
-                    corruptedZen.Parent = workspace
-                    accessBtn.Text = "Activated!"
-                    task.wait(1.5)
-                    accessBtn.Text = "Get Early Access"
-                end
-            end
+        spawnBtn.MouseButton1Click:Connect(function()
+            local character = player.Character
+            if not character then return end
+            
+            local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+            if not humanoidRootPart then return end
+            
+            -- Create a chest model
+            local chest = Instance.new("Model")
+            chest.Name = "KitsuneChest"
+            
+            local mainPart = Instance.new("Part")
+            mainPart.Name = "ChestBase"
+            mainPart.Size = Vector3.new(5, 3, 5)
+            mainPart.Position = humanoidRootPart.Position + humanoidRootPart.CFrame.LookVector * 8
+            mainPart.Anchored = true
+            mainPart.CanCollide = true
+            mainPart.Color = Color3.fromRGB(255, 165, 0) -- Orange color
+            mainPart.Parent = chest
+            
+            local topPart = Instance.new("Part")
+            topPart.Name = "ChestLid"
+            topPart.Size = Vector3.new(4.9, 0.5, 4.9)
+            topPart.Position = mainPart.Position + Vector3.new(0, 1.75, 0)
+            topPart.Anchored = true
+            topPart.CanCollide = true
+            topPart.Color = Color3.fromRGB(200, 120, 0) -- Darker orange
+            topPart.Parent = chest
+            
+            local clickDetector = Instance.new("ClickDetector")
+            clickDetector.Parent = mainPart
+            
+            chest.Parent = workspace
+            
+            spawnBtn.Text = "Chest Spawned!"
+            task.wait(1.5)
+            spawnBtn.Text = "Spawn Kitsune Chest"
         end)
     end
     
@@ -846,7 +893,7 @@ end
 
 tabContainer.Parent = contentFrame
 
--- Drag functionality
+-- Improved drag functionality
 local dragStart
 local startPos
 local isDragging = false
@@ -867,7 +914,7 @@ titleBar.InputBegan:Connect(function(input)
     end
 end)
 
-titleBar.InputChanged:Connect(function(input)
+UserInputService.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement and isDragging then
         local delta = input.Position - dragStart
         mainWindow.Position = UDim2.new(
