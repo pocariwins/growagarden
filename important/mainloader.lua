@@ -1,25 +1,16 @@
--- Wait for the game to fully load before starting
+-- Wait for game to load
 if not game:IsLoaded() then
     game.Loaded:Wait()
 end
 
--- Ensure core services are available
-local success, _ = pcall(function()
-    return game:GetService("Players")
-end)
-
-if not success then
-    repeat task.wait() until pcall(function() return game:GetService("Players") end)
-end
-
--- Now safely create the GUI
+-- Get core services
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
--- Create ScreenGui
+-- Create GUI
 local gui = Instance.new("ScreenGui")
 gui.Name = "PocariGUI"
 gui.ResetOnSpawn = false
@@ -27,12 +18,16 @@ gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.DisplayOrder = 10
 gui.Enabled = true
 
+-- Player reference
+local player = Players.LocalPlayer
 if not player then
     player = Players:WaitForChild("LocalPlayer")
 end
 
+-- Configuration
 local rareChancePercentage = 1
 
+-- Pet definitions
 local petTable = {
     ["Common Egg"] = { "Dog", "Bunny", "Golden Lab" },
     ["Uncommon Egg"] = { "Chicken", "Black Bunny", "Cat", "Deer" },
@@ -71,6 +66,7 @@ local rarePets = {
     ["French Fry Ferret"] = "Gourmet Egg"
 }
 
+-- Visual effects
 local function rainbowEffect(label)
     if not label or not label:IsDescendantOf(game) then return end
     coroutine.wrap(function()
@@ -94,6 +90,7 @@ local function glitchLabelEffect(label)
     end)()
 end
 
+-- Egg handling
 local function getHatchState(eggModel)
     local hatchReady = true
     local hatchTime = eggModel:FindFirstChild("HatchTime")
@@ -456,7 +453,6 @@ local function setupMutationESP()
     end)
 end
 
--- Add missing randomizeAnimation function
 local function randomizeAnimation(button, options, duration, callback)
     local startTime = os.clock()
     local endTime = startTime + duration
@@ -1083,10 +1079,12 @@ local function initializeAfterParenting()
 end
 
 -- Parent GUI to PlayerGui
-local player = Players.LocalPlayer
 if player then
     local playerGui = player:WaitForChild("PlayerGui")
     gui.Parent = playerGui
+    
+    -- Initialize tweens and scans after parenting
+    task.spawn(initializeAfterParenting)
 else
     warn("Player not found! GUI cannot be parented.")
 end
