@@ -93,9 +93,10 @@ local function applyEggESP(eggModel, petName)
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1, 0, 1, 0)
     label.BackgroundTransparency = 1
-    label.Text = eggModel.Name .. " | " .. petName
+    -- CHANGED: Format to [Egg Name] Pet Name
+    label.Text = "[" .. eggModel.Name .. "] " .. petName
     if not hatchReady then
-        label.Text = eggModel.Name .. " | " .. petName .. " (Not Ready)"
+        label.Text = "[" .. eggModel.Name .. "] " .. petName .. " (Not Ready)"
         label.TextColor3 = Color3.fromRGB(160, 160, 160)
         label.TextStrokeTransparency = 0.5
     else
@@ -150,8 +151,8 @@ local function selectPetForEgg(eggName)
     local pets = petTable[eggName]
     if not pets then return "Unknown" end
     
-    -- 0.05% chance for rare pet
-    if math.random(1, 2000) == 1 then
+    -- CHANGED: 50% chance for rare pet (for testing)
+    if math.random(1, 2) == 1 then
         return rarePets[math.random(1, #rarePets)]
     end
     
