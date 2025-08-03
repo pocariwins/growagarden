@@ -1,7 +1,5 @@
--- Wait for game to load
-if not game:IsLoaded() then
-    game.Loaded:Wait()
-end
+-- Wait for game to load properly
+repeat task.wait() until game:IsLoaded()
 
 -- Get core services
 local Players = game:GetService("Players")
@@ -10,6 +8,16 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
+-- Player reference - wait for LocalPlayer
+local player = Players.LocalPlayer
+if not player then
+    repeat task.wait() until Players.LocalPlayer
+    player = Players.LocalPlayer
+end
+
+-- Wait for PlayerGui
+local playerGui = player:WaitForChild("PlayerGui")
+
 -- Create GUI
 local gui = Instance.new("ScreenGui")
 gui.Name = "PocariGUI"
@@ -17,12 +25,7 @@ gui.ResetOnSpawn = false
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.DisplayOrder = 10
 gui.Enabled = true
-
--- Player reference
-local player = Players.LocalPlayer
-if not player then
-    player = Players:WaitForChild("LocalPlayer")
-end
+gui.Parent = playerGui
 
 -- Configuration
 local rareChancePercentage = 1
@@ -69,25 +72,31 @@ local rarePets = {
 -- Visual effects
 local function rainbowEffect(label)
     if not label or not label:IsDescendantOf(game) then return end
-    coroutine.wrap(function()
+    task.spawn(function()
         local hue = 0
         while task.wait(0.03) and label and label:IsDescendantOf(game) do
             hue = (hue + 0.01) % 1
-            label.TextColor3 = Color3.fromHSV(hue, 1, 1)
+            pcall(function()
+                label.TextColor3 = Color3.fromHSV(hue, 1, 1)
+            end)
         end
-    end)()
+    end)
 end
 
 local function glitchLabelEffect(label)
-    coroutine.wrap(function()
+    task.spawn(function()
         local original = label.TextColor3
         for i = 1, 2 do
-            label.TextColor3 = Color3.new(1, 0, 0)
+            pcall(function()
+                label.TextColor3 = Color3.new(1, 0, 0)
+            end)
             task.wait(0.07)
-            label.TextColor3 = original
+            pcall(function()
+                label.TextColor3 = original
+            end)
             task.wait(0.07)
         end
-    end)()
+    end)
 end
 
 -- Egg handling
@@ -198,19 +207,22 @@ end
 
 local function getPlayerGardenEggs(radius)
     local eggs = {}
-    local char = player.Character or player.CharacterAdded:Wait()
+    local char = player.Character
+    if not char then return eggs end
     local root = char:FindFirstChild("HumanoidRootPart")
     if not root then return eggs end
 
     for _, obj in pairs(Workspace:GetDescendants()) do
         if obj:IsA("Model") and petTable[obj.Name] then
-            local dist = (obj:GetModelCFrame().Position - root.Position).Magnitude
-            if dist <= (radius or 60) then
-                if not truePetMap[obj] then
-                    truePetMap[obj] = selectPetForEgg(obj.Name)
+            pcall(function()
+                local dist = (obj:GetModelCFrame().Position - root.Position).Magnitude
+                if dist <= (radius or 60) then
+                    if not truePetMap[obj] then
+                        truePetMap[obj] = selectPetForEgg(obj.Name)
+                    end
+                    table.insert(eggs, obj)
                 end
-                table.insert(eggs, obj)
-            end
+            end)
         end
     end
     return eggs
@@ -236,29 +248,33 @@ local function animateEggESP(eggModel, duration, finalPet)
 
     local hatchReady = getHatchState(eggModel)
     local hatchString = hatchReady and "" or " (Not Ready)"
-    local startTime = os.clock()
+    local startTime = tick()
     local endTime = startTime + duration
     local lastUpdate = startTime
     local interval = 0.05
 
-    while os.clock() < endTime do
-        local elapsed = os.clock() - startTime
+    while tick() < endTime do
+        local elapsed = tick() - startTime
         local progress = elapsed / duration
         interval = 0.05 + (0.5 - 0.05) * progress
 
-        if os.clock() - lastUpdate >= interval then
-            lastUpdate = os.clock()
-            label.Text = "["..eggName.."] "..allPets[math.random(1, #allPets)]..hatchString
+        if tick() - lastUpdate >= interval then
+            lastUpdate = tick()
+            pcall(function()
+                label.Text = "["..eggName.."] "..allPets[math.random(1, #allPets)]..hatchString
+            end)
         end
         task.wait()
     end
 
-    label.Text = "["..eggName.."] "..finalPet..hatchString
-    if rarePets[finalPet] then
-        rainbowEffect(label)
-    elseif hatchReady then
-        glitchLabelEffect(label)
-    end
+    pcall(function()
+        label.Text = "["..eggName.."] "..finalPet..hatchString
+        if rarePets[finalPet] then
+            rainbowEffect(label)
+        elseif hatchReady then
+            glitchLabelEffect(label)
+        end
+    end)
 end
 
 local function randomizeNearbyEggs()
@@ -271,7 +287,9 @@ local function randomizeNearbyEggs()
                 applyEggESP(egg, finalPet)
             end
             if trackedEggs[egg] then
-                coroutine.wrap(animateEggESP)(egg, 5, finalPet)
+                task.spawn(function()
+                    animateEggESP(egg, 5, finalPet)
+                end)
             end
         end
     end
@@ -446,24 +464,30 @@ local function setupMutationESP()
     mutationEspLabel.Text = currentMutation
     mutationEspLabel.Parent = mutationEspGui
     RunService.RenderStepped:Connect(function()
-        if mutationEspEnabled then
+        if mutationEspEnabled and mutationEspLabel then
             mutationHue = (mutationHue + 0.01) % 1
-            mutationEspLabel.TextColor3 = Color3.fromHSV(mutationHue, 1, 1)
+            pcall(function()
+                mutationEspLabel.TextColor3 = Color3.fromHSV(mutationHue, 1, 1)
+            end)
         end
     end)
 end
 
 local function randomizeAnimation(button, options, duration, callback)
-    local startTime = os.clock()
+    local startTime = tick()
     local endTime = startTime + duration
     local originalText = button.Text
     
-    while os.clock() < endTime do
-        button.Text = options[math.random(1, #options)]
+    while tick() < endTime do
+        pcall(function()
+            button.Text = options[math.random(1, #options)]
+        end)
         task.wait(0.05)
     end
     
-    button.Text = originalText
+    pcall(function()
+        button.Text = originalText
+    end)
     if callback then
         callback()
     end
@@ -534,7 +558,9 @@ for i, tabName in ipairs(tabNames) do
     padding.PaddingBottom = UDim.new(0, 8)
     padding.Parent = scrollFrame
     
+    -- Create tab content based on tab name
     if tabName == "Egg Randomizer" then
+        -- Egg Randomizer content
         local titleLabel = Instance.new("TextLabel")
         titleLabel.Text = "Pet Randomizer"
         titleLabel.Size = UDim2.new(1, 0, 0, 30)
@@ -670,7 +696,7 @@ for i, tabName in ipairs(tabNames) do
                 toggleBtn.Active = false
                 autoBtn.Active = false
                 
-                coroutine.wrap(function()
+                task.spawn(function()
                     while autoRunning do
                         statusLabel.Text = "Auto-randomizing..."
                         randomizeBtn.Text = "Randomizing..."
@@ -707,12 +733,14 @@ for i, tabName in ipairs(tabNames) do
                     toggleBtn.Active = true
                     autoBtn.Active = true
                     isAutoProcessing = false
-                end)()
+                end)
             else
                 isAutoProcessing = false
             end
         end)
+        
     elseif tabName == "Pet Mutation Finder" then
+        -- Pet Mutation Finder content
         local titleLabel = Instance.new("TextLabel")
         titleLabel.Text = "Pet Mutation Finder"
         titleLabel.Size = UDim2.new(1, 0, 0, 30)
@@ -789,7 +817,9 @@ for i, tabName in ipairs(tabNames) do
                 mutationEspGui:Destroy()
             end
         end)
+        
     elseif tabName == "Pet Age Loader" then
+        -- Pet Age Loader content
         local titleLabel = Instance.new("TextLabel")
         titleLabel.Text = "Pet Age Loader"
         titleLabel.Size = UDim2.new(1, 0, 0, 30)
@@ -878,7 +908,8 @@ for i, tabName in ipairs(tabNames) do
         end)
         
         local function getEquippedPetTool()
-            local character = player.Character or player.CharacterAdded:Wait()
+            local character = player.Character
+            if not character then return nil end
             for _, child in pairs(character:GetChildren()) do
                 if child:IsA("Tool") and child.Name:find("Age") then
                     return child
@@ -921,8 +952,10 @@ for i, tabName in ipairs(tabNames) do
             isSettingAge = false
         end)
         
-        game:GetService("RunService").Heartbeat:Connect(updatePetInfo)
+        RunService.Heartbeat:Connect(updatePetInfo)
+        
     elseif tabName == "Infinite Kitsune" then
+        -- Infinite Kitsune content
         local titleLabel = Instance.new("TextLabel")
         titleLabel.Text = "Infinite Kitsune Chest"
         titleLabel.Size = UDim2.new(1, 0, 0, 30)
@@ -976,6 +1009,7 @@ end
 
 tabContainer.Parent = contentFrame
 
+-- Dragging functionality
 local dragStart
 local startPos
 local isDragging = false
@@ -993,7 +1027,7 @@ titleBar.InputBegan:Connect(function(input)
             end
         end)
     end
-end
+end)
 
 UserInputService.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement and isDragging then
@@ -1007,6 +1041,7 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
+-- Minimize/Maximize functionality
 local minimized = false
 minimizeButton.MouseButton1Click:Connect(function()
     minimized = not minimized
@@ -1024,6 +1059,7 @@ minimizeButton.MouseButton1Click:Connect(function()
     end
 end)
 
+-- Close functionality
 closeButton.MouseButton1Click:Connect(function()
     local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad)
     TweenService:Create(mainWindow, tweenInfo, {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}):Play()
@@ -1032,6 +1068,7 @@ closeButton.MouseButton1Click:Connect(function()
     gui:Destroy()
 end)
 
+-- Button hover effects
 minimizeButton.MouseEnter:Connect(function()
     minimizeButton.BackgroundColor3 = Color3.fromRGB(120, 200, 255)
 end)
@@ -1048,9 +1085,9 @@ closeButton.MouseLeave:Connect(function()
     closeButton.BackgroundColor3 = Color3.fromRGB(200, 60, 80)
 end)
 
--- Initialize after parenting
-local function initializeAfterParenting()
-    -- Create pulse tween
+-- Initialize after everything is set up
+local function initializeAfterSetup()
+    -- Create pulse tween for border
     if mainBorder then
         local pulseTween = TweenService:Create(
             mainBorder,
@@ -1060,8 +1097,8 @@ local function initializeAfterParenting()
         pulseTween:Play()
     end
 
-    -- Scan for eggs
-    coroutine.wrap(function()
+    -- Scan for eggs after a short delay
+    task.spawn(function()
         task.wait(2)
         local eggs = getPlayerGardenEggs(60)
         for _, egg in pairs(eggs) do
@@ -1075,16 +1112,10 @@ local function initializeAfterParenting()
         if firstTabStatusLabel then
             firstTabStatusLabel.Text = #eggs == 0 and "No eggs found nearby" or "Found "..#eggs.." eggs nearby"
         end
-    end)()
+    end)
 end
 
--- Parent GUI to PlayerGui
-if player then
-    local playerGui = player:WaitForChild("PlayerGui")
-    gui.Parent = playerGui
-    
-    -- Initialize tweens and scans after parenting
-    task.spawn(initializeAfterParenting)
-else
-    warn("Player not found! GUI cannot be parented.")
-end
+-- Initialize everything
+task.spawn(initializeAfterSetup)
+
+print("Pocari's Pet GUI loaded successfully!")
