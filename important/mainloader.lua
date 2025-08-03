@@ -19,14 +19,14 @@ local petTable = {
     ["Legendary Egg"] = { "Cow", "Sea Otter", "Turtle", "Silver Monkey", "Polar Bear" }, -- Added Polar Bear
     ["Mythical Egg"] = { "Grey Mouse", "Brown Mouse", "Squirrel", "Red Giant Ant", "Red Fox" }, -- Added Red Fox
     ["Bug Egg"] = { "Snail", "Caterpillar", "Giant Ant", "Praying Mantis", "Dragonfly" }, -- Added Dragonfly
-    ["Night Egg"] = { "Frog", "Hedgehog", "Mole", "Echo Frog", "Night Owl" },
+    ["Night Egg"] = { "Frog", "Hedgehog", "Mole", "Echo Frog", "Night Owl", "Raccoon" },
     ["Bee Egg"] = { "Bee", "Honey Bee", "Bear Bee", "Petal Bee", "Queen Bee" }, -- Added Queen Bee
     ["Anti Bee Egg"] = { "Wasp", "Moth", "Tarantula Hawk", "Butterfly", "Disco Bee" }, -- Added Butterfly and Disco Bee
-    ["Oasis Egg"] = { "Meerkat", "Sand Snake", "Axolotl" },
-    ["Paradise Egg"] = { "Ostrich", "Peacock", "Capybara", "Mimic Octopus" }, -- Added Mimic Octopus
-    ["Dinosaur Egg"] = { "Raptor", "Triceratops", "Stegosaurus", "T-Rex" }, -- Added T-Rex
-    ["Primal Egg"] = { "Parasaurolophus", "Iguanodon", "Pachycephalosaurus", "Spinosaurus" }, -- Added Spinosaurus
-    ["Zen Egg"] = { "Kitsune" } -- Added Zen Egg with Kitsune
+    ["Oasis Egg"] = { "Meerkat", "Sand Snake", "Axolotl", "Hyacinth Macaw", "Fennec Fox" },
+    ["Paradise Egg"] = { "Ostrich", "Peacock", "Capybara", "Scarlet Macaw", "Mimic Octopus" }, -- Added Mimic Octopus
+    ["Dinosaur Egg"] = { "Raptor", "Triceratops", "Stegosaurus", "Pterodactyl", "Brontosaurus", "T-Rex" }, -- Added T-Rex
+    ["Primal Egg"] = { "Parasaurolophus", "Iguanodon", "Pachycephalosaurus", "Dilophosaurus", "Ankylosaurus", "Spinosaurus" }, -- Added Spinosaurus
+    ["Zen Egg"] = { "Shiba Inu", "Nihonzaru", "Tanuki", 'Tanchozuru", "Kappa", "Kitsune" } -- Added Zen Egg with Kitsune
 }
 
 -- ESP OFF BY DEFAULT
