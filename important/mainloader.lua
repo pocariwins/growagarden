@@ -529,11 +529,6 @@ local function createMutationChangerContent()
     title.TextXAlignment = Enum.TextXAlignment.Center
     title.Parent = content
     
-    local mutationList = {
-        "Shiny", "Inverted", "Frozen", "Windy", "Golden", "Mega", "Tiny",
-        "Tranquil", "IronSkin", "Radiant", "Rainbow", "Shocked", "Ascended"
-    }
-    
     local mutationDropdown = Instance.new("TextButton")
     mutationDropdown.Name = "MutationDropdown"
     mutationDropdown.Size = UDim2.new(0.9, 0, 0, 30)
@@ -1440,13 +1435,6 @@ local function getEquippedPetTool()
     return nil
 end
 
-local function updateGUI(content, text)
-    local petInfo = content:FindFirstChild("PetInfo")
-    if petInfo then
-        petInfo.Text = text
-    end
-end
-
 local infiniteChestContent = tabContents["Infinite Kitsune Chest"]
 if infiniteChestContent then
     local toggleBtn = infiniteChestContent:FindFirstChild("ToggleButton")
@@ -1484,6 +1472,12 @@ local mutationChangerContent = tabContents["Pet Mutation Changer"]
 if mutationChangerContent then
     local mutationDropdown = mutationChangerContent:FindFirstChild("MutationDropdown")
     local applyBtn = mutationChangerContent:FindFirstChild("ApplyButton")
+    local petInfo = mutationChangerContent:FindFirstChild("PetInfo")
+    
+    local mutations = {
+        "Shiny", "Inverted", "Frozen", "Windy", "Golden", "Mega", "Tiny",
+        "Tranquil", "IronSkin", "Radiant", "Rainbow", "Shocked", "Ascended"
+    }
     
     local selectedMutation = "Shiny"
     
@@ -1506,7 +1500,7 @@ if mutationChangerContent then
                 end
                 
                 tool.Name = newName
-                updateGUI(mutationChangerContent, "Equipped Pet: " .. tool.Name)
+                petInfo.Text = "Equipped Pet: " .. tool.Name
                 
                 applyBtn.Text = "✅ Mutation Applied!"
                 wait(2)
@@ -1525,9 +1519,9 @@ if mutationChangerContent then
             pcall(function()
                 local tool = getEquippedPetTool()
                 if tool then
-                    updateGUI(mutationChangerContent, "Equipped Pet: " .. tool.Name)
+                    petInfo.Text = "Equipped Pet: " .. tool.Name
                 else
-                    updateGUI(mutationChangerContent, "Equipped Pet: [None]")
+                    petInfo.Text = "Equipped Pet: [None]"
                 end
             end)
         end
