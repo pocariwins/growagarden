@@ -2,6 +2,7 @@ local gui = Instance.new("ScreenGui")
 gui.Name = "PocariGUI"
 gui.ResetOnSpawn = false
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.DisplayOrder = 99999
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
