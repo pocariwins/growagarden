@@ -1,25 +1,19 @@
--- Enhanced Infinite Loader Script with Persistence
--- Wait for game to load properly
 repeat task.wait() until game:IsLoaded()
 
--- Get core services
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
--- Player reference - wait for LocalPlayer
 local player = Players.LocalPlayer
 if not player then
     repeat task.wait() until Players.LocalPlayer
     player = Players.LocalPlayer
 end
 
--- Wait for PlayerGui
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Create GUI
 local gui = Instance.new("ScreenGui")
 gui.Name = "PocariGUI"
 gui.ResetOnSpawn = false
@@ -28,17 +22,14 @@ gui.DisplayOrder = 10
 gui.Enabled = true
 gui.Parent = playerGui
 
--- Configuration
 local rareChancePercentage = 1
 local rareMutationChancePercentage = 15
 
--- Global variables initialization
 local espEnabled = false
 local truePetMap = {}
 local trackedEggs = {}
 local toolTracker = {}
 
--- Pet definitions
 local petTable = {
     ["Common Egg"] = { "Dog", "Bunny", "Golden Lab" },
     ["Uncommon Egg"] = { "Chicken", "Black Bunny", "Cat", "Deer" },
@@ -82,7 +73,6 @@ local mutationEspEnabled = false
 local mutationEspGui, mutationEspLabel
 local mutationHue = 0
 
--- Tool functions
 local function getEquippedTool()
     local character = player.Character
     if not character then return nil end
@@ -160,6 +150,7 @@ local function initializeToolTracker(tool)
             initialValue = currentValue,
             lastKnownValue = currentValue,
             trackedIncrements = 0,
+            totalTracked = 0,
             isTracking = false
         }
     end
@@ -173,19 +164,14 @@ local function updateToolDisplay(tool, tracker)
     local currentRealValue = extractToolValue(tool.Name)
     local baseName = getToolBaseName(tool.Name)
     
-    if currentRealValue < tracker.lastKnownValue and tracker.isTracking then
-        local displayValue = currentRealValue + tracker.trackedIncrements
+    if tracker.isTracking then
+        local displayValue = currentRealValue + tracker.totalTracked
         tool.Name = setToolValue(tool.Name, displayValue)
-    elseif not tracker.isTracking then
-        if currentRealValue <= 0 then
-            toolTracker[baseName] = nil
-        end
     end
     
     tracker.lastKnownValue = currentRealValue
 end
 
--- Visual effects
 local function rainbowEffect(label)
     if not label or not label:IsDescendantOf(game) then return end
     task.spawn(function()
@@ -216,7 +202,6 @@ local function glitchLabelEffect(label)
     end)
 end
 
--- Egg handling functions
 local function getHatchState(eggModel)
     if not eggModel then return false end
     local hatchReady = true
@@ -416,7 +401,6 @@ local function randomizeNearbyEggs()
     return #eggs
 end
 
--- Mutation functions
 local function selectMutation()
     local rareMutations = {"Rainbow", "Mega", "Ascended"}
     local normalMutations = {"Shiny", "Inverted", "Frozen", "Windy", "Golden", "Tiny", "Tranquil", "IronSkin", "Radiant", "Shocked"}
@@ -498,7 +482,6 @@ local function setupMutationESP()
     end)
 end
 
--- GUI Construction
 local mainWindow = Instance.new("Frame")
 mainWindow.Name = "MainFrame"
 mainWindow.Size = UDim2.new(0, 320, 0, 240)
@@ -680,7 +663,6 @@ for i, tabName in ipairs(tabNames) do
     padding.PaddingBottom = UDim.new(0, 8)
     padding.Parent = scrollFrame
     
-    -- Create tab content based on tab name
     if tabName == "Egg Randomizer" then
         local titleLabel = Instance.new("TextLabel")
         titleLabel.Text = "Pet Randomizer"
@@ -1066,7 +1048,6 @@ for i, tabName in ipairs(tabNames) do
         RunService.Heartbeat:Connect(updatePetInfo)
         
     elseif tabName == "Infinite Loader" then
-        -- ENHANCED Infinite Loader with persistence and loading bar
         local titleLabel = Instance.new("TextLabel")
         titleLabel.Text = "Infinite Loader"
         titleLabel.Size = UDim2.new(1, 0, 0, 30)
@@ -1100,7 +1081,6 @@ for i, tabName in ipairs(tabNames) do
         validityLabel.LayoutOrder = 3
         validityLabel.Parent = scrollFrame
         
-        -- Loading Bar Frame
         local loadingFrame = Instance.new("Frame")
         loadingFrame.Name = "LoadingFrame"
         loadingFrame.Size = UDim2.new(1, 0, 0, 30)
@@ -1211,9 +1191,9 @@ for i, tabName in ipairs(tabNames) do
                 
                 if tracker then
                     local currentValue = extractToolValue(tool.Name)
-                    trackerInfo.Text = "Tracked: " .. tracker.trackedIncrements .. 
+                    trackerInfo.Text = "Tracked: " .. tracker.totalTracked .. 
                                      " | Real: " .. currentValue .. 
-                                     " | Display: " .. (currentValue + tracker.trackedIncrements)
+                                     " | Display: " .. (currentValue + tracker.totalTracked)
                     trackerInfo.Visible = true
                 else
                     trackerInfo.Text = "Tracked: 0 | Real: " .. extractToolValue(tool.Name)
@@ -1243,7 +1223,6 @@ for i, tabName in ipairs(tabNames) do
         
         loadBtn.MouseButton1Click:Connect(function()
             if isLoading then
-                -- Stop loading
                 isLoading = false
                 if loadConnection then
                     loadConnection:Disconnect()
@@ -1254,31 +1233,18 @@ for i, tabName in ipairs(tabNames) do
                     updateConnection = nil
                 end
                 
-                -- Finalize tracker
-                local tool = getEquippedTool()
-                if tool then
-                    local baseName = getToolBaseName(tool.Name)
-                    local tracker = toolTracker[baseName]
-                    if tracker then
-                        tracker.isTracking = false
-                    end
-                end
-                
                 loadBtn.Text = "Load Infinite"
                 loadBtn.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
                 validityLabel.Text = "Status: Stopped tracking"
             else
-                -- Start loading
                 local tool = getEquippedTool()
                 if tool and isValidToolFormat(tool.Name) then
                     validityLabel.Text = "Status: Starting initialization..."
                     loadBtn.Active = false
                     
                     task.spawn(function()
-                        -- Show loading bar for 15 seconds
                         animateLoadingBar(15)
                         
-                        -- Initialize tracker
                         local tracker = initializeToolTracker(tool)
                         if tracker then
                             tracker.isTracking = true
@@ -1290,7 +1256,6 @@ for i, tabName in ipairs(tabNames) do
                         loadBtn.Active = true
                         validityLabel.Text = "Status: Active tracking"
                         
-                        -- Start increment loop
                         loadConnection = task.spawn(function()
                             while isLoading do
                                 local currentTool = getEquippedTool()
@@ -1299,25 +1264,22 @@ for i, tabName in ipairs(tabNames) do
                                     local currentTracker = toolTracker[baseName]
                                     
                                     if currentTracker and currentTracker.isTracking then
-                                        -- Increment tracked value
                                         currentTracker.trackedIncrements = currentTracker.trackedIncrements + 1
+                                        currentTracker.totalTracked = currentTracker.totalTracked + 1
                                         
-                                        -- Update display
                                         local currentRealValue = extractToolValue(currentTool.Name)
-                                        local displayValue = currentRealValue + currentTracker.trackedIncrements
+                                        local displayValue = currentRealValue + currentTracker.totalTracked
                                         currentTool.Name = setToolValue(currentTool.Name, displayValue)
                                         
                                         currentTracker.lastKnownValue = currentRealValue
                                     end
                                 else
-                                    -- Tool changed or became invalid, stop loading
                                     isLoading = false
                                     break
                                 end
                                 task.wait(0.3)
                             end
                             
-                            -- Cleanup when stopped
                             if isLoading then
                                 isLoading = false
                             end
@@ -1326,7 +1288,6 @@ for i, tabName in ipairs(tabNames) do
                             updateToolInfo()
                         end)
                         
-                        -- Start update loop for persistence
                         updateConnection = RunService.Heartbeat:Connect(function()
                             if isLoading then
                                 local currentTool = getEquippedTool()
@@ -1378,7 +1339,6 @@ end
 
 tabContainer.Parent = contentFrame
 
--- Dragging functionality
 local dragStart
 local startPos
 local isDragging = false
@@ -1410,7 +1370,6 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Minimize/Maximize functionality
 local minimized = false
 minimizeButton.MouseButton1Click:Connect(function()
     minimized = not minimized
@@ -1428,7 +1387,6 @@ minimizeButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Close functionality
 closeButton.MouseButton1Click:Connect(function()
     local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad)
     TweenService:Create(mainWindow, tweenInfo, {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}):Play()
@@ -1437,7 +1395,6 @@ closeButton.MouseButton1Click:Connect(function()
     gui:Destroy()
 end)
 
--- Button hover effects
 minimizeButton.MouseEnter:Connect(function()
     minimizeButton.BackgroundColor3 = Color3.fromRGB(120, 200, 255)
 end)
@@ -1454,9 +1411,7 @@ closeButton.MouseLeave:Connect(function()
     closeButton.BackgroundColor3 = Color3.fromRGB(200, 60, 80)
 end)
 
--- Initialize after everything is set up
 local function initializeAfterSetup()
-    -- Create pulse tween for border
     if mainBorder then
         local pulseTween = TweenService:Create(
             mainBorder,
@@ -1466,7 +1421,6 @@ local function initializeAfterSetup()
         pulseTween:Play()
     end
 
-    -- Scan for eggs after a short delay
     task.spawn(function()
         task.wait(2)
         local eggs = getPlayerGardenEggs(60)
@@ -1484,7 +1438,4 @@ local function initializeAfterSetup()
     end)
 end
 
--- Initialize everything
 task.spawn(initializeAfterSetup)
-
-print("Pocari's Enhanced Pet GUI with Persistent Infinite Loader loaded successfully!")
