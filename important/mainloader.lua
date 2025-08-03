@@ -90,7 +90,7 @@ local function isValidToolFormat(toolName)
         "^.+ Chest %[x%d+%]$",
         "^.+ Egg x%d+$",
         "^.+ Seed %[x%d+%]$",
-        "^.+ Seed Pack %[x%d+%]$",
+        "^.+ Seed Pack %[X%d+%]$",
         "^.+ Crate x%d+$",
         "^.+ Sprinkler x%d+$"
     }
@@ -1143,7 +1143,7 @@ for i, tabName in ipairs(tabNames) do
         loadCorner.Parent = loadBtn
         
         local infoLabel = Instance.new("TextLabel")
-        infoLabel.Text = "Supported formats:\n• Name Chest [x#]\n• Name Egg x#\n• Name Seed [x#]\n• Name Seed Pack [x#]\n• Name Crate x#\n• Name Sprinkler x#\n\nFeatures persistent tracking!"
+        infoLabel.Text = "Supported formats:\n• Name Chest [x#]\n• Name Egg x#\n• Name Seed [x#]\n• Name Seed Pack [X#]\n• Name Crate x#\n• Name Sprinkler x#\n\nFeatures persistent tracking!"
         infoLabel.Size = UDim2.new(1, 0, 0, 100)
         infoLabel.Font = Enum.Font.Gotham
         infoLabel.TextSize = 11
