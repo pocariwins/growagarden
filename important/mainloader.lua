@@ -214,6 +214,7 @@ local function countdownAndRandomize(button, statusLabel)
     end
 end
 
+-- Create main GUI container
 local mainWindow = Instance.new("Frame")
 mainWindow.Name = "MainFrame"
 mainWindow.Size = UDim2.new(0, 320, 0, 240)
@@ -231,6 +232,7 @@ mainBorder.Color = Color3.fromRGB(100, 150, 255)
 mainBorder.Thickness = 2
 mainBorder.Parent = mainWindow
 
+-- Title bar
 local titleBar = Instance.new("Frame")
 titleBar.Name = "TitleBar"
 titleBar.Size = UDim2.new(1, 0, 0, 32)
@@ -253,6 +255,7 @@ titleLabel.Size = UDim2.new(0, 200, 1, 0)
 titleLabel.Position = UDim2.new(0, 12, 0, 0)
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
+-- Close button
 local closeButton = Instance.new("TextButton")
 closeButton.Name = "CloseButton"
 closeButton.Text = "×"
@@ -268,6 +271,7 @@ local closeCorner = Instance.new("UICorner")
 closeCorner.CornerRadius = UDim.new(0, 6)
 closeCorner.Parent = closeButton
 
+-- Minimize button
 local minimizeButton = Instance.new("TextButton")
 minimizeButton.Name = "MinimizeButton"
 minimizeButton.Text = "-"
@@ -284,6 +288,7 @@ minCorner.CornerRadius = UDim.new(0, 6)
 minCorner.Parent = minimizeButton
 minimizeButton.Parent = titleBar
 
+-- Content frame
 local contentFrame = Instance.new("Frame")
 contentFrame.Name = "ContentFrame"
 contentFrame.BackgroundTransparency = 1
@@ -291,6 +296,7 @@ contentFrame.Size = UDim2.new(1, -16, 1, -60)
 contentFrame.Position = UDim2.new(0, 8, 0, 40)
 contentFrame.ClipsDescendants = true
 
+-- Watermark
 local watermark = Instance.new("TextLabel")
 watermark.Name = "Watermark"
 watermark.Text = "created by pocari ;)"
@@ -302,6 +308,7 @@ watermark.Size = UDim2.new(1, 0, 0, 16)
 watermark.Position = UDim2.new(0, 0, 1, -16)
 watermark.TextYAlignment = Enum.TextYAlignment.Top
 
+-- Assemble title bar
 closeButton.Parent = titleBar
 titleLabel.Parent = titleBar
 titleBar.Parent = mainWindow
@@ -309,6 +316,7 @@ watermark.Parent = mainWindow
 contentFrame.Parent = mainWindow
 mainWindow.Parent = gui
 
+-- Tab container
 local tabContainer = Instance.new("ScrollingFrame")
 tabContainer.Name = "TabContainer"
 tabContainer.Size = UDim2.new(1, 0, 1, 0)
@@ -832,6 +840,7 @@ end
 
 tabContainer.Parent = contentFrame
 
+-- Drag functionality
 local dragStart
 local startPos
 local isDragging = false
@@ -864,6 +873,7 @@ titleBar.InputChanged:Connect(function(input)
     end
 end)
 
+-- Minimize functionality
 local minimized = false
 minimizeButton.MouseButton1Click:Connect(function()
     minimized = not minimized
@@ -882,6 +892,7 @@ minimizeButton.MouseButton1Click:Connect(function()
     end
 end)
 
+-- Close functionality
 closeButton.MouseButton1Click:Connect(function()
     local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad)
     tweenService:Create(mainWindow, tweenInfo, {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}):Play()
@@ -890,6 +901,7 @@ closeButton.MouseButton1Click:Connect(function()
     gui:Destroy()
 end)
 
+-- Button hover effects
 minimizeButton.MouseEnter:Connect(function()
     minimizeButton.BackgroundColor3 = Color3.fromRGB(120, 200, 255)
 end)
@@ -906,6 +918,7 @@ closeButton.MouseLeave:Connect(function()
     closeButton.BackgroundColor3 = Color3.fromRGB(200, 60, 80)
 end)
 
+-- Pulse animation for border
 local pulseTween = tweenService:Create(
     mainBorder,
     TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
@@ -913,6 +926,7 @@ local pulseTween = tweenService:Create(
 )
 pulseTween:Play()
 
+-- Initialization coroutine
 coroutine.wrap(function()
     task.wait(2)
     local eggs = getPlayerGardenEggs(60)
@@ -934,4 +948,6 @@ coroutine.wrap(function()
     end
 end)()
 
-gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+-- Parent GUI to player's PlayerGui
+local playerGui = player:WaitForChild("PlayerGui")
+gui.Parent = playerGui
