@@ -23,12 +23,13 @@ local gui = Instance.new("ScreenGui")
 gui.Name = "PocariGUI"
 gui.ResetOnSpawn = false
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-gui.DisplayOrder = 999
+gui.DisplayOrder = 10
 gui.Enabled = true
 gui.Parent = playerGui
 
 -- Configuration
-local rareChancePercentage = 50
+local rareChancePercentage = 1
+local rareMutationChancePercentage = 15 -- NEW: Variable to control rare mutation likelihood
 
 -- Pet definitions
 local petTable = {
@@ -431,6 +432,47 @@ local mutationEspEnabled = false
 local mutationEspGui, mutationEspLabel
 local mutationHue = 0
 
+-- NEW: Function to select mutation with rare chance
+local function selectMutation()
+    local rareMutations = {"Rainbow", "Mega", "Ascended"}
+    local normalMutations = {"Shiny", "Inverted", "Frozen", "Windy", "Golden", "Tiny", "Tranquil", "IronSkin", "Radiant", "Shocked"}
+    
+    if math.random(1, 100) <= rareMutationChancePercentage then
+        return rareMutations[math.random(1, #rareMutations)]
+    else
+        return normalMutations[math.random(1, #normalMutations)]
+    end
+end
+
+-- NEW: Function to animate mutation ESP
+local function animateMutationESP(duration, finalMutation)
+    if not mutationEspEnabled or not mutationEspLabel then return end
+    
+    local startTime = tick()
+    local endTime = startTime + duration
+    local lastUpdate = startTime
+    local interval = 0.05
+
+    while tick() < endTime do
+        local elapsed = tick() - startTime
+        local progress = elapsed / duration
+        interval = 0.05 + (0.3 - 0.05) * progress
+
+        if tick() - lastUpdate >= interval then
+            lastUpdate = tick()
+            pcall(function()
+                mutationEspLabel.Text = mutations[math.random(1, #mutations)]
+            end)
+        end
+        task.wait()
+    end
+
+    pcall(function()
+        mutationEspLabel.Text = finalMutation
+        currentMutation = finalMutation
+    end)
+end
+
 local function findMutationMachine()
     for _, obj in pairs(Workspace:GetDescendants()) do
         if obj:IsA("Model") and obj.Name:lower():find("mutation") then
@@ -784,28 +826,22 @@ for i, tabName in ipairs(tabNames) do
         rerollBtn.MouseButton1Click:Connect(function()
             rerollBtn.Text = "Rerolling..."
             rerollBtn.Active = false
-            local weightedMutations = {}
-            for _, mutation in ipairs(mutations) do
-                if mutation == "Rainbow" or mutation == "Mega" or mutation == "Ascended" then
-                    if math.random(1, 3) == 1 then
-                        table.insert(weightedMutations, mutation)
-                    end
-                else
-                    table.insert(weightedMutations, mutation)
-                end
+            
+            -- Select the final mutation using the new function
+            local finalMutation = selectMutation()
+            
+            -- Animate the ESP instead of the button
+            if mutationEspEnabled then
+                task.spawn(function()
+                    animateMutationESP(3, finalMutation)
+                end)
+            else
+                currentMutation = finalMutation
             end
-            randomizeAnimation(rerollBtn, mutations, 5, function()
-                if #weightedMutations > 0 then
-                    currentMutation = weightedMutations[math.random(1, #weightedMutations)]
-                else
-                    currentMutation = mutations[math.random(1, #mutations)]
-                end
-                if mutationEspEnabled and mutationEspLabel then
-                    mutationEspLabel.Text = currentMutation
-                end
-                rerollBtn.Text = "Reroll Mutation"
-                rerollBtn.Active = true
-            end)
+            
+            task.wait(3.5)
+            rerollBtn.Text = "Reroll Mutation"
+            rerollBtn.Active = true
         end)
         
         toggleBtn.MouseButton1Click:Connect(function()
