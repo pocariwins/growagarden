@@ -17,7 +17,7 @@ local gui = Instance.new("ScreenGui")
 gui.Name = "PocariGUI"
 gui.ResetOnSpawn = false
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-gui.DisplayOrder = 10
+gui.DisplayOrder = 9999
 gui.Enabled = true
 gui.Parent = playerGui
 
