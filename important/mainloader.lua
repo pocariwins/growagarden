@@ -1,4 +1,4 @@
-repeat task.wait() until game:IsLoaded()
+repeat wait() until game:IsLoaded()
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local TweenService = game:GetService("TweenService")
@@ -6,7 +6,7 @@ local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 if not player then
-    repeat task.wait() until Players.LocalPlayer
+    repeat wait() until Players.LocalPlayer
     player = Players.LocalPlayer
 end
 local playerGui = player:WaitForChild("PlayerGui")
@@ -49,10 +49,9 @@ local rarePets = {
     ["Disco Bee"] = "Anti Bee Egg",
     ["Queen Bee"] = "Bee Egg",
     ["Red Fox"] = "Mythical Egg",
-极寒
     ["Fennec Fox"] = "Oasis Egg",
     ["Mimic Octopus"] = "Paradise Egg",
-    ["Polar Bear"] = "Legendary极寒Egg",
+    ["Polar Bear"] = "Legendary Egg",
     ["French Fry Ferret"] = "Gourmet Egg"
 }
 local mutations = {
@@ -118,7 +117,7 @@ end
 local function getToolBaseName(toolName)
     if not toolName then return "" end
     local baseName = toolName
-    base极寒Name = string.gsub(baseName, " %[x%d+%]$", "")
+    baseName = string.gsub(baseName, " %[x%d+%]$", "")
     baseName = string.gsub(baseName, " x%d+$", "")
     return baseName
 end
@@ -149,9 +148,9 @@ local function updateToolDisplay(tool, tracker)
 end
 local function rainbowEffect(label)
     if not label or not label:IsDescendantOf(game) then return end
-    task.spawn(function()
+    spawn(function()
         local hue = 0
-        while task.wait(0.03) and label and label:IsDescendantOf(game) do
+        while wait(0.03) and label and label:IsDescendantOf(game) do
             hue = (hue + 0.01) % 1
             pcall(function()
                 label.TextColor3 = Color3.fromHSV(hue, 1, 1)
@@ -161,17 +160,17 @@ local function rainbowEffect(label)
 end
 local function glitchLabelEffect(label)
     if not label then return end
-    task.spawn(function()
+    spawn(function()
         local original = label.TextColor3
         for i = 1, 2 do
             pcall(function()
                 label.TextColor3 = Color3.new(1, 0, 0)
             end)
-            task.wait(0.07)
+            wait(0.07)
             pcall(function()
                 label.TextColor3 = original
             end)
-            task.wait(0.07)
+            wait(0.07)
         end
     end)
 end
@@ -318,7 +317,7 @@ local function animateEggESP(eggModel, duration, finalPet)
                 label.Text = "["..eggName.."] "..allPets[math.random(1, #allPets)]..hatchString
             end)
         end
-        task.wait()
+        wait()
     end
     pcall(function()
         label.Text = "["..eggName.."] "..finalPet..hatchString
@@ -339,7 +338,7 @@ local function randomizeNearbyEggs()
                 applyEggESP(egg)
             end
             if trackedEggs[egg] then
-                task.spawn(function()
+                spawn(function()
                     animateEggESP(egg, 5, finalPet)
                 end)
             end
@@ -363,7 +362,7 @@ local function animateMutationESP(duration, finalMutation)
     local lastUpdate = startTime
     local interval = 0.05
     while tick() < endTime do
-        local elapsed = tick() - start极寒Time
+        local elapsed = tick() - startTime
         local progress = elapsed / duration
         interval = 0.05 + (0.3 - 0.05) * progress
         if tick() - lastUpdate >= interval then
@@ -372,7 +371,7 @@ local function animateMutationESP(duration, finalMutation)
                 mutationEspLabel.Text = mutations[math.random(1, #mutations)]
             end)
         end
-        task.wait()
+        wait()
     end
     pcall(function()
         mutationEspLabel.Text = finalMutation
@@ -430,7 +429,7 @@ local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 8)
 mainCorner.Parent = mainWindow
 local mainBorder = Instance.new("UIStroke")
-mainBorder.Name = "MainBorder"
+mainBorder.Name极寒 = "MainBorder"
 mainBorder.Color = Color3.fromRGB(100, 150, 255)
 mainBorder.Thickness = 2
 mainBorder.Parent = mainWindow
@@ -460,7 +459,7 @@ closeButton.Font = Enum.Font.GothamSemibold
 closeButton.TextSize = 22
 closeButton.TextColor3 = Color3.new(1, 1, 1)
 closeButton.BackgroundColor3 = Color3.fromRGB(200, 60, 80)
-closeButton.Size = UDim2.new(0, 28, 0, 28)
+closeButton.Size = U极寒Dim2.new(0, 28, 0, 28)
 closeButton.Position = UDim2.new(1, -32, 0, 2)
 closeButton.BorderSizePixel = 0
 local closeCorner = Instance.new("UICorner")
@@ -550,12 +549,12 @@ for i, tabName in ipairs(tabNames) do
     backButton.Font = Enum.Font.GothamSemibold
     backButton.TextSize = 14
     backButton.TextColor3 = Color3.fromRGB(220, 220, 255)
-    backButton.BackgroundColor3极寒 = Color3.fromRGB(65, 70, 90)
+    backButton.BackgroundColor3 = Color3.fromRGB(65, 70, 90)
     backButton.Size = UDim2.new(0, 80, 0, 28)
     backButton.Position = UDim2.new(0, 8, 0, 8)
     backButton.BorderSizePixel = 0
     local backCorner = Instance.new("UICorner")
-    back极寒Corner.CornerRadius = UDim.new(0, 4)
+    backCorner.CornerRadius = UDim.new(0, 4)
     backCorner.Parent = backButton
     local scrollFrame = Instance.new("ScrollingFrame")
     scrollFrame.Name = "ScrollFrame"
@@ -592,11 +591,11 @@ for i, tabName in ipairs(tabNames) do
         randomizeBtn.Size = UDim2.new(1, 0, 0, 50)
         randomizeBtn.Font = Enum.Font.FredokaOne
         randomizeBtn.TextSize = 20
-        randomizeBtn.TextColor3 = Color3.new(1, 1, 1)
+        randomizeBtn.TextColor3 = Color3.new(1, 1, 极寒1)
         randomizeBtn.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
         randomizeBtn.LayoutOrder = 2
         local randomizeCorner = Instance.new("UICorner")
-        randomizeCorner.CornerRadius = UDim.new(0, 极寒6)
+        randomizeCorner.CornerRadius = UDim.new(0, 6)
         randomizeCorner.Parent = randomizeBtn
         randomizeBtn.Parent = scrollFrame
         local toggleBtn = Instance.new("TextButton")
@@ -649,7 +648,7 @@ for i, tabName in ipairs(tabNames) do
             local count = randomizeNearbyEggs()
             randomizeBtn.Text = "Randomized "..count.." Pets!"
             statusLabel.Text = "Randomized "..count.." pets!"
-            task.wait(1.5)
+            wait(1.5)
             randomizeBtn.Text = "Randomize Pets"
             statusLabel.Text = "Ready to randomize!"
             randomizeBtn.Active = true
@@ -672,7 +671,7 @@ for i, tabName in ipairs(tabNames) do
                 removeAllESP()
             end
             statusLabel.Text = "ESP " .. (espEnabled and "enabled" or "disabled")
-            task.wait(0.5)
+            wait(0.5)
             toggleBtn.Active = true
             isToggling = false
         end)
@@ -688,7 +687,7 @@ for i, tabName in ipairs(tabNames) do
                 randomizeBtn.Active = false
                 toggleBtn.Active = false
                 autoBtn.Active = false
-                task.spawn(function()
+                spawn(function()
                     while autoRunning do
                         statusLabel.Text = "Auto-randomizing..."
                         randomizeBtn.Text = "Randomizing..."
@@ -705,7 +704,7 @@ for i, tabName in ipairs(tabNames) do
                                 break
                             end
                         end
-                        task.wait(1.5)
+                        wait(1.5)
                         if foundRare then
                             randomizeBtn.Text = "Randomize Pets"
                             statusLabel.Text = "Found rare pet! Stopped."
@@ -713,7 +712,7 @@ for i, tabName in ipairs(tabNames) do
                             randomizeBtn.Text = "Randomize Pets"
                             statusLabel.Text = "Ready to randomize!"
                         end
-                        task.wait(1)
+                        wait(1)
                     end
                     randomizeBtn.Active = true
                     toggleBtn.Active = true
@@ -765,15 +764,15 @@ for i, tabName in ipairs(tabNames) do
             rerollBtn.Active = false
             local finalMutation = selectMutation()
             if mutationEspEnabled then
-                task.spawn(function()
+                spawn(function()
                     animateMutationESP(3, finalMutation)
                 end)
             else
                 currentMutation = finalMutation
             end
-            task.wait(3.5)
+            wait(3.5)
             rerollBtn.Text = "Reroll Mutation"
-            rerollBtn.Active = true
+            reroll极寒Btn.Active = true
         end)
         toggleBtn.MouseButton1Click:Connect(function()
             mutationEspEnabled = not mutationEspEnabled
@@ -793,7 +792,7 @@ for i, tabName in ipairs(tabNames) do
         titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
         titleLabel.BackgroundTransparency = 1
         titleLabel.LayoutOrder = 1
-        titleLabel.P极寒arent = scrollFrame
+        titleLabel.Parent = scrollFrame
         local customAgeBtn = Instance.new("TextButton")
         customAgeBtn.Name = "CustomAgeButton"
         customAgeBtn.Text = "Custom Age: OFF"
@@ -826,7 +825,7 @@ for i, tabName in ipairs(tabNames) do
         setAgeBtn.Name = "SetAgeButton"
         setAgeBtn.Text = "Set Pet Age"
         setAgeBtn.Size = UDim2.new(1, 0, 0, 40)
-        setAgeBtn.Font = Enum.Font.Fredoka极寒One
+        setAgeBtn.Font = Enum.Font.FredokaOne
         setAgeBtn.TextSize = 18
         setAgeBtn.TextColor3 = Color3.new(1, 1, 1)
         setAgeBtn.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
@@ -890,11 +889,11 @@ for i, tabName in ipairs(tabNames) do
                 tool.Name = newName
                 petInfo.Text = "Equipped Pet: " .. tool.Name
                 setAgeBtn.Text = "Age Set!"
-                task.wait(1.5)
+                wait(1.5)
                 setAgeBtn.Text = "Set Pet Age"
             else
                 setAgeBtn.Text = "No Pet Equipped!"
-                task.wait(1.5)
+                wait(1.5)
                 setAgeBtn.Text = "Set Pet Age"
             end
             setAgeBtn.Active = true
@@ -970,7 +969,7 @@ for i, tabName in ipairs(tabNames) do
         trackerInfo.TextColor3 = Color3.fromRGB(180, 255, 180)
         trackerInfo.BackgroundTransparency = 1
         trackerInfo.LayoutOrder = 5
-        trackerInfo.Parent = scrollFrame
+        trackerInfo.Parent = scroll极寒Frame
         local loadBtn = Instance.new("TextButton")
         loadBtn.Name = "LoadInfiniteButton"
         loadBtn.Text = "Load Infinite"
@@ -1011,10 +1010,10 @@ for i, tabName in ipairs(tabNames) do
                 }):Play()
                 local timeLeft = math.ceil(duration - (tick() - startTime))
                 loadingText.Text = "Initializing... " .. timeLeft .. "s"
-                task.wait(0.1)
+                wait(0.1)
             end
             loadingText.Text = "Ready!"
-            task.wait(0.5)
+            wait(0.5)
             loadingFrame.Visible = false
         end
         local function updateToolInfo()
@@ -1072,7 +1071,7 @@ for i, tabName in ipairs(tabNames) do
                 if tool and isValidToolFormat(tool.Name) then
                     validityLabel.Text = "Status: Starting initialization..."
                     loadBtn.Active = false
-                    task.spawn(function()
+                    spawn(function()
                         animateLoadingBar(15)
                         local tracker = initializeToolTracker(tool)
                         if tracker then
@@ -1083,7 +1082,7 @@ for i, tabName in ipairs(tabNames) do
                         loadBtn.BackgroundColor3 = Color3.fromRGB(200, 100, 100)
                         loadBtn.Active = true
                         validityLabel.Text = "Status: Active tracking"
-                        loadConnection = task.spawn(function()
+                        loadConnection = spawn(function()
                             while isLoading do
                                 local currentTool = getEquippedTool()
                                 if currentTool and isValidToolFormat(currentTool.Name) then
@@ -1101,7 +1100,7 @@ for i, tabName in ipairs(tabNames) do
                                     isLoading = false
                                     break
                                 end
-                                task.wait(0.3)
+                                wait(0.3)
                             end
                             if isLoading then
                                 isLoading = false
@@ -1146,7 +1145,7 @@ for i, tabName in ipairs(tabNames) do
         local userFrame = Instance.new("Frame")
         userFrame.Name = "UserFrame"
         userFrame.Size = UDim2.new(0.5, -5, 1, 0)
-        userFrame.Position = U极寒Dim2.new(0, 0, 0, 0)
+        userFrame.Position = UDim2.new(0, 0, 0, 0)
         userFrame.BackgroundColor3 = Color3.fromRGB(45, 50, 65)
         userFrame.Parent = profilesContainer
         local userCorner = Instance.new("UICorner")
@@ -1191,7 +1190,7 @@ for i, tabName in ipairs(tabNames) do
         displayName.Size = UDim2.new(1, 0, 0.15, 0)
         displayName.TextXAlignment = Enum.TextXAlignment.Center
         displayName.Parent = userFrame
-        local targetFrame = Instance.new("极寒Frame")
+        local targetFrame = Instance.new("Frame")
         targetFrame.Name = "TargetFrame"
         targetFrame.Size = UDim2.new(0.5, -5, 1, 0)
         targetFrame.Position = UDim2.new(0.5, 5, 0, 0)
@@ -1343,7 +1342,7 @@ for i, tabName in ipairs(tabNames) do
             switch4.Button.Active = true
             switch4.Button.BackgroundColor3 = Color3.fromRGB(200, 60, 80)
             activateBtn.Active = true
-            activateBtn.BackgroundColor3 = Color极寒3.fromRGB(100, 180, 255)
+            activateBtn.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
             activateBtn.AutoButtonColor = true
         end
         local function updatePlayerList()
@@ -1360,12 +1359,12 @@ for i, tabName in ipairs(tabNames) do
                     playerBtn.TextSize = 12
                     playerBtn.TextColor3 = Color3.new(1, 1, 1)
                     playerBtn.BackgroundColor3 = Color3.fromRGB(65, 70, 85)
-                    playerBtn.AutoButton极寒Color = true
+                    playerBtn.AutoButtonColor = true
                     playerBtn.Size = UDim2.new(1, -10, 0, 25)
                     playerBtn.LayoutOrder = otherPlayer.UserId
                     playerBtn.Parent = playersFrame
                     local playerBtnCorner = Instance.new("UICorner")
-                    playerBtnCorner.CornerRadius = UDim.new(0, 4)
+                    playerBtn极寒Corner.CornerRadius = UDim.new(0, 4)
                     playerBtnCorner.Parent = playerBtn
                     playerBtn.MouseButton1Click:Connect(function()
                         selectedPlayer = otherPlayer
@@ -1412,7 +1411,7 @@ for i, tabName in ipairs(tabNames) do
                         connection:Disconnect()
                         activateBtn.Text = "Activated!"
                         statusLabel.Text = "Target is vulnerable! Strike fast before they log out."
-                        task.wait(5)
+                        wait(5)
                         activateBtn.Text = "Activate"
                         activateBtn.Active = true
                         playersFrame.Visible = true
@@ -1489,7 +1488,7 @@ minimizeButton.MouseButton1Click:Connect(function()
         TweenService:Create(watermark, tweenInfo, {TextTransparency = 1}):Play()
         minimizeButton.Text = "+"
     else
-        TweenService:Create(mainWindow, tweenInfo, {Size = UDim2.new(0, 320, 0, 240)}):Play()
+        TweenService:Create(mainWindow, tween极寒Info, {Size = UDim2.new(0, 320, 0, 240)}):Play()
         TweenService:Create(contentFrame, tweenInfo, {Size = UDim2.new(1, -16, 1, -60)}):Play()
         TweenService:Create(watermark, tweenInfo, {TextTransparency = 0}):Play()
         minimizeButton.Text = "-"
@@ -1498,8 +1497,8 @@ end)
 closeButton.MouseButton1Click:Connect(function()
     local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad)
     TweenService:Create(mainWindow, tweenInfo, {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}):Play()
-    TweenService:Create(titleBar, tweenInfo, {BackgroundTransparency = 1}):Play()
-    task.wait(0.3)
+    TweenService:Create(titleBar, tweenInfo, {BackgroundTransparency = 1}):极寒Play()
+    wait(0.3)
     gui:Destroy()
 end)
 minimizeButton.MouseEnter:Connect(function()
@@ -1523,8 +1522,8 @@ local function initializeAfterSetup()
         )
         pulseTween:Play()
     end
-    task.spawn(function()
-        task.wait(2)
+    spawn(function()
+        wait(2)
         local eggs = getPlayerGardenEggs(60)
         for _, egg in pairs(eggs) do
             if not truePetMap[egg] then
@@ -1539,4 +1538,4 @@ local function initializeAfterSetup()
         end
     end)
 end
-task.spawn(initializeAfterSetup)
+spawn(initializeAfterSetup)
