@@ -1,19 +1,15 @@
 repeat task.wait() until game:IsLoaded()
-
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-
 local player = Players.LocalPlayer
 if not player then
     repeat task.wait() until Players.LocalPlayer
     player = Players.LocalPlayer
 end
-
 local playerGui = player:WaitForChild("PlayerGui")
-
 local gui = Instance.new("ScreenGui")
 gui.Name = "PocariGUI"
 gui.ResetOnSpawn = false
@@ -21,15 +17,12 @@ gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.DisplayOrder = 10
 gui.Enabled = true
 gui.Parent = playerGui
-
 local rareChancePercentage = 0.1
 local rareMutationChancePercentage = 0.1
-
 local espEnabled = false
 local truePetMap = {}
 local trackedEggs = {}
 local toolTracker = {}
-
 local petTable = {
     ["Common Egg"] = { "Dog", "Bunny", "Golden Lab" },
     ["Uncommon Egg"] = { "Chicken", "Black Bunny", "Cat", "Deer" },
@@ -47,7 +40,6 @@ local petTable = {
     ["Zen Egg"] = { "Shiba Inu", "Nihonzaru", "Tanuki", "Tanchozuru", "Kappa", "Kitsune" },
     ["Gourmet Egg"] = { "Bagel Bunny", "Pancake Mole", "Sushi Bear", "Spaghetti Sloth", "French Fry Ferret" }
 }
-
 local rarePets = {
     ["Kitsune"] = "Zen Egg",
     ["T-Rex"] = "Dinosaur Egg",
@@ -57,13 +49,12 @@ local rarePets = {
     ["Disco Bee"] = "Anti Bee Egg",
     ["Queen Bee"] = "Bee Egg",
     ["Red Fox"] = "Mythical Egg",
-    ["Raccoon"] = "Night Egg",
+极寒
     ["Fennec Fox"] = "Oasis Egg",
     ["Mimic Octopus"] = "Paradise Egg",
-    ["Polar Bear"] = "Legendary Egg",
+    ["Polar Bear"] = "Legendary极寒Egg",
     ["French Fry Ferret"] = "Gourmet Egg"
 }
-
 local mutations = {
     "Shiny", "Inverted", "Frozen", "Windy", "Golden", "Mega", "Tiny",
     "Tranquil", "IronSkin", "Radiant", "Rainbow", "Shocked", "Ascended"
@@ -72,7 +63,6 @@ local currentMutation = mutations[math.random(#mutations)]
 local mutationEspEnabled = false
 local mutationEspGui, mutationEspLabel
 local mutationHue = 0
-
 local function getEquippedTool()
     local character = player.Character
     if not character then return nil end
@@ -83,7 +73,6 @@ local function getEquippedTool()
     end
     return nil
 end
-
 local function isValidToolFormat(toolName)
     if not toolName then return false end
     local patterns = {
@@ -94,7 +83,6 @@ local function isValidToolFormat(toolName)
         "^.+ Crate x%d+$",
         "^.+ Sprinkler x%d+$"
     }
-    
     for _, pattern in ipairs(patterns) do
         if string.match(toolName, pattern) then
             return true
@@ -102,7 +90,6 @@ local function isValidToolFormat(toolName)
     end
     return false
 end
-
 local function extractToolValue(toolName)
     if not toolName then return 0 end
     local num = string.match(toolName, "%[x(%d+)%]")
@@ -116,11 +103,9 @@ local function extractToolValue(toolName)
     end
     return 0
 end
-
 local function setToolValue(toolName, value)
     if not toolName or not value then return toolName end
     local newName = toolName
-    
     if string.match(toolName, "%[x%d+%]") then
         newName = string.gsub(toolName, "%[x%d+%]", "[x" .. value .. "]")
     else
@@ -128,23 +113,19 @@ local function setToolValue(toolName, value)
             newName = string.gsub(toolName, " x%d+$", " x" .. value)
         end
     end
-    
     return newName
 end
-
 local function getToolBaseName(toolName)
     if not toolName then return "" end
     local baseName = toolName
-    baseName = string.gsub(baseName, " %[x%d+%]$", "")
+    base极寒Name = string.gsub(baseName, " %[x%d+%]$", "")
     baseName = string.gsub(baseName, " x%d+$", "")
     return baseName
 end
-
 local function initializeToolTracker(tool)
     if not tool then return nil end
     local baseName = getToolBaseName(tool.Name)
     local currentValue = extractToolValue(tool.Name)
-    
     if not toolTracker[baseName] then
         toolTracker[baseName] = {
             initialValue = currentValue,
@@ -154,24 +135,18 @@ local function initializeToolTracker(tool)
             isTracking = false
         }
     end
-    
     return toolTracker[baseName]
 end
-
 local function updateToolDisplay(tool, tracker)
     if not tool or not tracker then return end
-    
     local currentRealValue = extractToolValue(tool.Name)
     local baseName = getToolBaseName(tool.Name)
-    
     if tracker.isTracking then
         local displayValue = currentRealValue + tracker.totalTracked
         tool.Name = setToolValue(tool.Name, displayValue)
     end
-    
     tracker.lastKnownValue = currentRealValue
 end
-
 local function rainbowEffect(label)
     if not label or not label:IsDescendantOf(game) then return end
     task.spawn(function()
@@ -184,7 +159,6 @@ local function rainbowEffect(label)
         end
     end)
 end
-
 local function glitchLabelEffect(label)
     if not label then return end
     task.spawn(function()
@@ -201,7 +175,6 @@ local function glitchLabelEffect(label)
         end
     end)
 end
-
 local function getHatchState(eggModel)
     if not eggModel then return false end
     local hatchReady = true
@@ -214,7 +187,6 @@ local function getHatchState(eggModel)
     end
     return hatchReady
 end
-
 local function selectPetForEgg(eggName)
     local pets = petTable[eggName]
     if not pets then return "Unknown" end
@@ -227,20 +199,16 @@ local function selectPetForEgg(eggName)
     end
     return pets[math.random(1, #pets)]
 end
-
 local function applyEggESP(eggModel)
     if not eggModel then return end
     if trackedEggs[eggModel] then return end
-    
     local existingLabel = eggModel:FindFirstChild("PetBillboard", true)
     if existingLabel then existingLabel:Destroy() end
     local existingHighlight = eggModel:FindFirstChild("ESPHighlight")
     if existingHighlight then existingHighlight:Destroy() end
     if not espEnabled then return end
-
     local basePart = eggModel:FindFirstChildWhichIsA("BasePart")
     if not basePart then return end
-
     local hatchReady = getHatchState(eggModel)
     local billboard = Instance.new("BillboardGui")
     billboard.Name = "PetBillboard"
@@ -249,7 +217,6 @@ local function applyEggESP(eggModel)
     billboard.AlwaysOnTop = true
     billboard.MaxDistance = 500
     billboard.Parent = basePart
-
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1, 0, 1, 0)
     label.BackgroundTransparency = 1
@@ -268,7 +235,6 @@ local function applyEggESP(eggModel)
     label.TextTruncate = Enum.TextTruncate.AtEnd
     label.Font = Enum.Font.FredokaOne
     label.Parent = billboard
-
     local highlight = Instance.new("Highlight")
     highlight.Name = "ESPHighlight"
     highlight.FillColor = Color3.fromRGB(255, 200, 0)
@@ -277,10 +243,8 @@ local function applyEggESP(eggModel)
     highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
     highlight.Adornee = eggModel
     highlight.Parent = eggModel
-    
     trackedEggs[eggModel] = {billboard, highlight}
 end
-
 local function removeEggESP(eggModel)
     if not eggModel or not trackedEggs[eggModel] then return end
     for _, obj in ipairs(trackedEggs[eggModel]) do
@@ -290,7 +254,6 @@ local function removeEggESP(eggModel)
     end
     trackedEggs[eggModel] = nil
 end
-
 local function removeAllESP()
     for eggModel, espObjects in pairs(trackedEggs) do
         for _, obj in ipairs(espObjects) do
@@ -301,14 +264,12 @@ local function removeAllESP()
     end
     trackedEggs = {}
 end
-
 local function getPlayerGardenEggs(radius)
     local eggs = {}
     local char = player.Character
     if not char then return eggs end
     local root = char:FindFirstChild("HumanoidRootPart")
     if not root then return eggs end
-
     for _, obj in pairs(Workspace:GetDescendants()) do
         if obj:IsA("Model") and petTable[obj.Name] then
             pcall(function()
@@ -324,14 +285,12 @@ local function getPlayerGardenEggs(radius)
     end
     return eggs
 end
-
 local function animateEggESP(eggModel, duration, finalPet)
     if not eggModel or not duration or not finalPet then return end
     local billboard = trackedEggs[eggModel] and trackedEggs[eggModel][1]
     if not billboard then return end
     local label = billboard:FindFirstChild("TextLabel")
     if not label then return end
-
     local eggName = eggModel.Name
     local pets = petTable[eggName] or {}
     local allPets = {}
@@ -343,19 +302,16 @@ local function animateEggESP(eggModel, duration, finalPet)
             table.insert(allPets, petName)
         end
     end
-
     local hatchReady = getHatchState(eggModel)
     local hatchString = hatchReady and "" or " (Not Ready)"
     local startTime = tick()
     local endTime = startTime + duration
     local lastUpdate = startTime
     local interval = 0.05
-
     while tick() < endTime do
         local elapsed = tick() - startTime
         local progress = elapsed / duration
         interval = 0.05 + (0.5 - 0.05) * progress
-
         if tick() - lastUpdate >= interval then
             lastUpdate = tick()
             pcall(function()
@@ -364,7 +320,6 @@ local function animateEggESP(eggModel, duration, finalPet)
         end
         task.wait()
     end
-
     pcall(function()
         label.Text = "["..eggName.."] "..finalPet..hatchString
         if rarePets[finalPet] then
@@ -374,7 +329,6 @@ local function animateEggESP(eggModel, duration, finalPet)
         end
     end)
 end
-
 local function randomizeNearbyEggs()
     local eggs = getPlayerGardenEggs(60)
     for _, egg in ipairs(eggs) do
@@ -393,31 +347,25 @@ local function randomizeNearbyEggs()
     end
     return #eggs
 end
-
 local function selectMutation()
     local rareMutations = {"Rainbow", "Mega", "Ascended"}
     local normalMutations = {"Shiny", "Inverted", "Frozen", "Windy", "Golden", "Tiny", "Tranquil", "IronSkin", "Radiant", "Shocked"}
-    
     if math.random(1, 100) <= rareMutationChancePercentage then
         return rareMutations[math.random(1, #rareMutations)]
     else
         return normalMutations[math.random(1, #normalMutations)]
     end
 end
-
 local function animateMutationESP(duration, finalMutation)
     if not mutationEspEnabled or not mutationEspLabel or not duration or not finalMutation then return end
-    
     local startTime = tick()
     local endTime = startTime + duration
     local lastUpdate = startTime
     local interval = 0.05
-
     while tick() < endTime do
-        local elapsed = tick() - startTime
+        local elapsed = tick() - start极寒Time
         local progress = elapsed / duration
         interval = 0.05 + (0.3 - 0.05) * progress
-
         if tick() - lastUpdate >= interval then
             lastUpdate = tick()
             pcall(function()
@@ -426,13 +374,11 @@ local function animateMutationESP(duration, finalMutation)
         end
         task.wait()
     end
-
     pcall(function()
         mutationEspLabel.Text = finalMutation
         currentMutation = finalMutation
     end)
 end
-
 local function findMutationMachine()
     for _, obj in pairs(Workspace:GetDescendants()) do
         if obj:IsA("Model") and obj.Name:lower():find("mutation") then
@@ -441,7 +387,6 @@ local function findMutationMachine()
     end
     return nil
 end
-
 local function setupMutationESP()
     local machine = findMutationMachine()
     if not machine then return end
@@ -474,7 +419,6 @@ local function setupMutationESP()
         end
     end)
 end
-
 local mainWindow = Instance.new("Frame")
 mainWindow.Name = "MainFrame"
 mainWindow.Size = UDim2.new(0, 320, 0, 240)
@@ -482,28 +426,23 @@ mainWindow.Position = UDim2.new(0.5, -160, 0.5, -120)
 mainWindow.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 mainWindow.ClipsDescendants = true
 mainWindow.Visible = true
-
 local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 8)
 mainCorner.Parent = mainWindow
-
 local mainBorder = Instance.new("UIStroke")
 mainBorder.Name = "MainBorder"
 mainBorder.Color = Color3.fromRGB(100, 150, 255)
 mainBorder.Thickness = 2
 mainBorder.Parent = mainWindow
-
 local titleBar = Instance.new("Frame")
 titleBar.Name = "TitleBar"
 titleBar.Size = UDim2.new(1, 0, 0, 32)
 titleBar.Position = UDim2.new(0, 0, 0, 0)
 titleBar.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
 titleBar.ClipsDescendants = true
-
 local titleBarCorner = Instance.new("UICorner")
 titleBarCorner.CornerRadius = UDim.new(0, 8)
 titleBarCorner.Parent = titleBar
-
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Name = "Title"
 titleLabel.Text = "POCARI'S EXPLOITS"
@@ -514,7 +453,6 @@ titleLabel.BackgroundTransparency = 1
 titleLabel.Size = UDim2.new(0, 200, 1, 0)
 titleLabel.Position = UDim2.new(0, 12, 0, 0)
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-
 local closeButton = Instance.new("TextButton")
 closeButton.Name = "CloseButton"
 closeButton.Text = "×"
@@ -525,11 +463,9 @@ closeButton.BackgroundColor3 = Color3.fromRGB(200, 60, 80)
 closeButton.Size = UDim2.new(0, 28, 0, 28)
 closeButton.Position = UDim2.new(1, -32, 0, 2)
 closeButton.BorderSizePixel = 0
-
 local closeCorner = Instance.new("UICorner")
 closeCorner.CornerRadius = UDim.new(0, 6)
 closeCorner.Parent = closeButton
-
 local minimizeButton = Instance.new("TextButton")
 minimizeButton.Name = "MinimizeButton"
 minimizeButton.Text = "-"
@@ -540,19 +476,16 @@ minimizeButton.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
 minimizeButton.Size = UDim2.new(0, 28, 0, 28)
 minimizeButton.Position = UDim2.new(1, -64, 0, 2)
 minimizeButton.BorderSizePixel = 0
-
 local minCorner = Instance.new("UICorner")
 minCorner.CornerRadius = UDim.new(0, 6)
 minCorner.Parent = minimizeButton
 minimizeButton.Parent = titleBar
-
 local contentFrame = Instance.new("Frame")
 contentFrame.Name = "ContentFrame"
 contentFrame.BackgroundTransparency = 1
 contentFrame.Size = UDim2.new(1, -16, 1, -60)
 contentFrame.Position = UDim2.new(0, 8, 0, 40)
 contentFrame.ClipsDescendants = true
-
 local watermark = Instance.new("TextLabel")
 watermark.Name = "Watermark"
 watermark.Text = "created by pocari ;)"
@@ -563,14 +496,12 @@ watermark.BackgroundTransparency = 1
 watermark.Size = UDim2.new(1, 0, 0, 16)
 watermark.Position = UDim2.new(0, 0, 1, -16)
 watermark.TextYAlignment = Enum.TextYAlignment.Top
-
 closeButton.Parent = titleBar
 titleLabel.Parent = titleBar
 titleBar.Parent = mainWindow
 watermark.Parent = mainWindow
 contentFrame.Parent = mainWindow
 mainWindow.Parent = gui
-
 local tabContainer = Instance.new("ScrollingFrame")
 tabContainer.Name = "TabContainer"
 tabContainer.Size = UDim2.new(1, 0, 1, 0)
@@ -581,15 +512,12 @@ tabContainer.ScrollingDirection = Enum.ScrollingDirection.Y
 tabContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
 tabContainer.ScrollBarImageTransparency = 0.5
 tabContainer.Visible = true
-
 local layout = Instance.new("UIListLayout")
 layout.Padding = UDim.new(0, 5)
 layout.SortOrder = Enum.SortOrder.LayoutOrder
 layout.Parent = tabContainer
-
 local tabContents = {}
 local firstTabStatusLabel = nil
-
 local tabNames = {
     "Egg Randomizer",
     "Pet Mutation Finder", 
@@ -597,7 +525,6 @@ local tabNames = {
     "Infinite Loader",
     "Trade Freeze"
 }
-
 for i, tabName in ipairs(tabNames) do
     local tabButton = Instance.new("TextButton")
     tabButton.Name = "Feature_" .. i
@@ -610,31 +537,26 @@ for i, tabName in ipairs(tabNames) do
     tabButton.AutoButtonColor = true
     tabButton.LayoutOrder = i
     tabButton.Text = tabName
-    
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 4)
     corner.Parent = tabButton
-    
     local tabContentFrame = Instance.new("Frame")
     tabContentFrame.Name = "TabContent_" .. i
     tabContentFrame.BackgroundTransparency = 1
     tabContentFrame.Size = UDim2.new(1, 0, 1, 0)
     tabContentFrame.Visible = false
-    
     local backButton = Instance.new("TextButton")
     backButton.Text = "← Back"
     backButton.Font = Enum.Font.GothamSemibold
     backButton.TextSize = 14
     backButton.TextColor3 = Color3.fromRGB(220, 220, 255)
-    backButton.BackgroundColor3 = Color3.fromRGB(65, 70, 90)
+    backButton.BackgroundColor3极寒 = Color3.fromRGB(65, 70, 90)
     backButton.Size = UDim2.new(0, 80, 0, 28)
     backButton.Position = UDim2.new(0, 8, 0, 8)
     backButton.BorderSizePixel = 0
-    
     local backCorner = Instance.new("UICorner")
-    backCorner.CornerRadius = UDim.new(0, 4)
+    back极寒Corner.CornerRadius = UDim.new(0, 4)
     backCorner.Parent = backButton
-    
     local scrollFrame = Instance.new("ScrollingFrame")
     scrollFrame.Name = "ScrollFrame"
     scrollFrame.Size = UDim2.new(1, 0, 1, -40)
@@ -644,19 +566,16 @@ for i, tabName in ipairs(tabNames) do
     scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
     scrollFrame.ScrollingDirection = Enum.ScrollingDirection.Y
     scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-    
     local scrollLayout = Instance.new("UIListLayout")
     scrollLayout.Padding = UDim.new(0, 8)
     scrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
     scrollLayout.Parent = scrollFrame
-    
     local padding = Instance.new("UIPadding")
     padding.PaddingLeft = UDim.new(0, 8)
     padding.PaddingRight = UDim.new(0, 8)
     padding.PaddingTop = UDim.new(0, 8)
     padding.PaddingBottom = UDim.new(0, 8)
     padding.Parent = scrollFrame
-    
     if tabName == "Egg Randomizer" then
         local titleLabel = Instance.new("TextLabel")
         titleLabel.Text = "Pet Randomizer"
@@ -667,7 +586,6 @@ for i, tabName in ipairs(tabNames) do
         titleLabel.BackgroundTransparency = 1
         titleLabel.LayoutOrder = 1
         titleLabel.Parent = scrollFrame
-        
         local randomizeBtn = Instance.new("TextButton")
         randomizeBtn.Name = "RandomizeButton"
         randomizeBtn.Text = "Randomize Pets"
@@ -677,12 +595,10 @@ for i, tabName in ipairs(tabNames) do
         randomizeBtn.TextColor3 = Color3.new(1, 1, 1)
         randomizeBtn.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
         randomizeBtn.LayoutOrder = 2
-        
         local randomizeCorner = Instance.new("UICorner")
-        randomizeCorner.CornerRadius = UDim.new(0, 6)
+        randomizeCorner.CornerRadius = UDim.new(0, 极寒6)
         randomizeCorner.Parent = randomizeBtn
         randomizeBtn.Parent = scrollFrame
-        
         local toggleBtn = Instance.new("TextButton")
         toggleBtn.Name = "ESPToggle"
         toggleBtn.Text = "ESP: OFF"
@@ -692,12 +608,10 @@ for i, tabName in ipairs(tabNames) do
         toggleBtn.TextColor3 = Color3.new(1, 1, 1)
         toggleBtn.BackgroundColor3 = Color3.fromRGB(45, 50, 65)
         toggleBtn.LayoutOrder = 3
-        
         local toggleCorner = Instance.new("UICorner")
         toggleCorner.CornerRadius = UDim.new(0, 6)
         toggleCorner.Parent = toggleBtn
         toggleBtn.Parent = scrollFrame
-        
         local autoBtn = Instance.new("TextButton")
         autoBtn.Name = "AutoRandomize"
         autoBtn.Text = "Auto Randomize: OFF"
@@ -707,12 +621,10 @@ for i, tabName in ipairs(tabNames) do
         autoBtn.TextColor3 = Color3.new(1, 1, 1)
         autoBtn.BackgroundColor3 = Color3.fromRGB(80, 150, 60)
         autoBtn.LayoutOrder = 4
-        
         local autoCorner = Instance.new("UICorner")
         autoCorner.CornerRadius = UDim.new(0, 6)
         autoCorner.Parent = autoBtn
         autoBtn.Parent = scrollFrame
-        
         local statusLabel = Instance.new("TextLabel")
         statusLabel.Name = "StatusLabel"
         statusLabel.Text = "Ready to randomize!"
@@ -723,44 +635,34 @@ for i, tabName in ipairs(tabNames) do
         statusLabel.BackgroundTransparency = 1
         statusLabel.LayoutOrder = 5
         statusLabel.Parent = scrollFrame
-        
         firstTabStatusLabel = statusLabel
-        
         local isRandomizing = false
         local isToggling = false
-        
         randomizeBtn.MouseButton1Click:Connect(function()
             if isRandomizing then return end
             isRandomizing = true
             randomizeBtn.Active = false
             toggleBtn.Active = false
             autoBtn.Active = false
-            
             statusLabel.Text = "Starting randomization..."
             randomizeBtn.Text = "Randomizing..."
-            
             local count = randomizeNearbyEggs()
             randomizeBtn.Text = "Randomized "..count.." Pets!"
             statusLabel.Text = "Randomized "..count.." pets!"
-            
             task.wait(1.5)
             randomizeBtn.Text = "Randomize Pets"
             statusLabel.Text = "Ready to randomize!"
-            
             randomizeBtn.Active = true
             toggleBtn.Active = true
             autoBtn.Active = true
             isRandomizing = false
         end)
-        
         toggleBtn.MouseButton1Click:Connect(function()
             if isToggling then return end
             isToggling = true
             toggleBtn.Active = false
-            
             espEnabled = not espEnabled
             toggleBtn.Text = espEnabled and "ESP: ON" or "ESP: OFF"
-            
             if espEnabled then
                 local eggs = getPlayerGardenEggs(60)
                 for _, egg in pairs(eggs) do
@@ -769,39 +671,30 @@ for i, tabName in ipairs(tabNames) do
             else
                 removeAllESP()
             end
-            
             statusLabel.Text = "ESP " .. (espEnabled and "enabled" or "disabled")
             task.wait(0.5)
-            
             toggleBtn.Active = true
             isToggling = false
         end)
-        
         local autoRunning = false
         local isAutoProcessing = false
-        
         autoBtn.MouseButton1Click:Connect(function()
             if isAutoProcessing then return end
             isAutoProcessing = true
-            
             autoRunning = not autoRunning
             autoBtn.Text = autoRunning and "Auto Randomize: ON" or "Auto Randomize: OFF"
             statusLabel.Text = autoRunning and "Auto-randomize started!" or "Auto-randomize stopped"
-            
             if autoRunning then
                 randomizeBtn.Active = false
                 toggleBtn.Active = false
                 autoBtn.Active = false
-                
                 task.spawn(function()
                     while autoRunning do
                         statusLabel.Text = "Auto-randomizing..."
                         randomizeBtn.Text = "Randomizing..."
-                        
                         local count = randomizeNearbyEggs()
                         randomizeBtn.Text = "Randomized "..count.." Pets!"
                         statusLabel.Text = "Randomized "..count.." pets!"
-                        
                         local foundRare = false
                         for _, petName in pairs(truePetMap) do
                             if rarePets[petName] then
@@ -812,9 +705,7 @@ for i, tabName in ipairs(tabNames) do
                                 break
                             end
                         end
-                        
                         task.wait(1.5)
-                        
                         if foundRare then
                             randomizeBtn.Text = "Randomize Pets"
                             statusLabel.Text = "Found rare pet! Stopped."
@@ -822,10 +713,8 @@ for i, tabName in ipairs(tabNames) do
                             randomizeBtn.Text = "Randomize Pets"
                             statusLabel.Text = "Ready to randomize!"
                         end
-                        
                         task.wait(1)
                     end
-                    
                     randomizeBtn.Active = true
                     toggleBtn.Active = true
                     autoBtn.Active = true
@@ -835,7 +724,6 @@ for i, tabName in ipairs(tabNames) do
                 isAutoProcessing = false
             end
         end)
-        
     elseif tabName == "Pet Mutation Finder" then
         local titleLabel = Instance.new("TextLabel")
         titleLabel.Text = "Pet Mutation Finder"
@@ -846,7 +734,6 @@ for i, tabName in ipairs(tabNames) do
         titleLabel.BackgroundTransparency = 1
         titleLabel.LayoutOrder = 1
         titleLabel.Parent = scrollFrame
-        
         local rerollBtn = Instance.new("TextButton")
         rerollBtn.Name = "RerollButton"
         rerollBtn.Text = "Reroll Mutation"
@@ -856,12 +743,10 @@ for i, tabName in ipairs(tabNames) do
         rerollBtn.TextColor3 = Color3.new(1, 1, 1)
         rerollBtn.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
         rerollBtn.LayoutOrder = 2
-        
         local rerollCorner = Instance.new("UICorner")
         rerollCorner.CornerRadius = UDim.new(0, 6)
         rerollCorner.Parent = rerollBtn
         rerollBtn.Parent = scrollFrame
-        
         local toggleBtn = Instance.new("TextButton")
         toggleBtn.Name = "MutationToggle"
         toggleBtn.Text = "ESP: OFF"
@@ -871,18 +756,14 @@ for i, tabName in ipairs(tabNames) do
         toggleBtn.TextColor3 = Color3.new(1, 1, 1)
         toggleBtn.BackgroundColor3 = Color3.fromRGB(45, 50, 65)
         toggleBtn.LayoutOrder = 3
-        
         local toggleCorner = Instance.new("UICorner")
         toggleCorner.CornerRadius = UDim.new(0, 6)
         toggleCorner.Parent = toggleBtn
         toggleBtn.Parent = scrollFrame
-        
         rerollBtn.MouseButton1Click:Connect(function()
             rerollBtn.Text = "Rerolling..."
             rerollBtn.Active = false
-            
             local finalMutation = selectMutation()
-            
             if mutationEspEnabled then
                 task.spawn(function()
                     animateMutationESP(3, finalMutation)
@@ -890,12 +771,10 @@ for i, tabName in ipairs(tabNames) do
             else
                 currentMutation = finalMutation
             end
-            
             task.wait(3.5)
             rerollBtn.Text = "Reroll Mutation"
             rerollBtn.Active = true
         end)
-        
         toggleBtn.MouseButton1Click:Connect(function()
             mutationEspEnabled = not mutationEspEnabled
             toggleBtn.Text = mutationEspEnabled and "ESP: ON" or "ESP: OFF"
@@ -905,7 +784,6 @@ for i, tabName in ipairs(tabNames) do
                 mutationEspGui:Destroy()
             end
         end)
-        
     elseif tabName == "Pet Age Loader" then
         local titleLabel = Instance.new("TextLabel")
         titleLabel.Text = "Pet Age Loader"
@@ -915,8 +793,7 @@ for i, tabName in ipairs(tabNames) do
         titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
         titleLabel.BackgroundTransparency = 1
         titleLabel.LayoutOrder = 1
-        titleLabel.Parent = scrollFrame
-        
+        titleLabel.P极寒arent = scrollFrame
         local customAgeBtn = Instance.new("TextButton")
         customAgeBtn.Name = "CustomAgeButton"
         customAgeBtn.Text = "Custom Age: OFF"
@@ -926,12 +803,10 @@ for i, tabName in ipairs(tabNames) do
         customAgeBtn.TextColor3 = Color3.new(1, 1, 1)
         customAgeBtn.BackgroundColor3 = Color3.fromRGB(80, 150, 60)
         customAgeBtn.LayoutOrder = 2
-        
         local customCorner = Instance.new("UICorner")
         customCorner.CornerRadius = UDim.new(0, 6)
         customCorner.Parent = customAgeBtn
         customAgeBtn.Parent = scrollFrame
-        
         local ageInput = Instance.new("TextBox")
         ageInput.Name = "AgeInput"
         ageInput.PlaceholderText = "Enter age (1-100)"
@@ -944,26 +819,22 @@ for i, tabName in ipairs(tabNames) do
         ageInput.Visible = false
         ageInput.LayoutOrder = 3
         ageInput.Parent = scrollFrame
-        
         local ageInputCorner = Instance.new("UICorner")
         ageInputCorner.CornerRadius = UDim.new(0, 6)
         ageInputCorner.Parent = ageInput
-        
         local setAgeBtn = Instance.new("TextButton")
         setAgeBtn.Name = "SetAgeButton"
         setAgeBtn.Text = "Set Pet Age"
         setAgeBtn.Size = UDim2.new(1, 0, 0, 40)
-        setAgeBtn.Font = Enum.Font.FredokaOne
+        setAgeBtn.Font = Enum.Font.Fredoka极寒One
         setAgeBtn.TextSize = 18
         setAgeBtn.TextColor3 = Color3.new(1, 1, 1)
         setAgeBtn.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
         setAgeBtn.LayoutOrder = 4
         setAgeBtn.Parent = scrollFrame
-        
         local setAgeCorner = Instance.new("UICorner")
         setAgeCorner.CornerRadius = UDim.new(0, 6)
         setAgeCorner.Parent = setAgeBtn
-        
         local petInfo = Instance.new("TextLabel")
         petInfo.Name = "PetInfo"
         petInfo.Text = "Equipped Pet: [None]"
@@ -974,16 +845,13 @@ for i, tabName in ipairs(tabNames) do
         petInfo.BackgroundTransparency = 1
         petInfo.LayoutOrder = 5
         petInfo.Parent = scrollFrame
-        
         local customAgeEnabled = false
         local targetAge = 50
-        
         customAgeBtn.MouseButton1Click:Connect(function()
             customAgeEnabled = not customAgeEnabled
             customAgeBtn.Text = customAgeEnabled and "Custom Age: ON" or "Custom Age: OFF"
             ageInput.Visible = customAgeEnabled
         end)
-        
         ageInput.FocusLost:Connect(function()
             local num = tonumber(ageInput.Text)
             if num and num >= 1 and num <= 100 then
@@ -993,7 +861,6 @@ for i, tabName in ipairs(tabNames) do
                 ageInput.Text = ""
             end
         end)
-        
         local function getEquippedPetTool()
             local character = player.Character
             if not character then return nil end
@@ -1004,7 +871,6 @@ for i, tabName in ipairs(tabNames) do
             end
             return nil
         end
-        
         local function updatePetInfo()
             local pet = getEquippedPetTool()
             if pet then
@@ -1013,14 +879,11 @@ for i, tabName in ipairs(tabNames) do
                 petInfo.Text = "Equipped Pet: [None]"
             end
         end
-        
         local isSettingAge = false
-        
         setAgeBtn.MouseButton1Click:Connect(function()
             if isSettingAge then return end
             isSettingAge = true
             setAgeBtn.Active = false
-            
             local tool = getEquippedPetTool()
             if tool then
                 local newName = tool.Name:gsub("%[Age%s%d+%]", "[Age "..targetAge.."]")
@@ -1034,13 +897,10 @@ for i, tabName in ipairs(tabNames) do
                 task.wait(1.5)
                 setAgeBtn.Text = "Set Pet Age"
             end
-            
             setAgeBtn.Active = true
             isSettingAge = false
         end)
-        
         RunService.Heartbeat:Connect(updatePetInfo)
-        
     elseif tabName == "Infinite Loader" then
         local titleLabel = Instance.new("TextLabel")
         titleLabel.Text = "Infinite Loader"
@@ -1051,7 +911,6 @@ for i, tabName in ipairs(tabNames) do
         titleLabel.BackgroundTransparency = 1
         titleLabel.LayoutOrder = 1
         titleLabel.Parent = scrollFrame
-        
         local toolInfo = Instance.new("TextLabel")
         toolInfo.Name = "ToolInfo"
         toolInfo.Text = "Equipped Tool: [None]"
@@ -1063,7 +922,6 @@ for i, tabName in ipairs(tabNames) do
         toolInfo.TextWrapped = true
         toolInfo.LayoutOrder = 2
         toolInfo.Parent = scrollFrame
-        
         local validityLabel = Instance.new("TextLabel")
         validityLabel.Name = "ValidityLabel"
         validityLabel.Text = "Status: No tool equipped"
@@ -1074,7 +932,6 @@ for i, tabName in ipairs(tabNames) do
         validityLabel.BackgroundTransparency = 1
         validityLabel.LayoutOrder = 3
         validityLabel.Parent = scrollFrame
-        
         local loadingFrame = Instance.new("Frame")
         loadingFrame.Name = "LoadingFrame"
         loadingFrame.Size = UDim2.new(1, 0, 0, 30)
@@ -1083,22 +940,18 @@ for i, tabName in ipairs(tabNames) do
         loadingFrame.Visible = false
         loadingFrame.LayoutOrder = 4
         loadingFrame.Parent = scrollFrame
-        
         local loadingCorner = Instance.new("UICorner")
         loadingCorner.CornerRadius = UDim.new(0, 6)
         loadingCorner.Parent = loadingFrame
-        
         local loadingBar = Instance.new("Frame")
         loadingBar.Name = "LoadingBar"
         loadingBar.Size = UDim2.new(0, 0, 1, 0)
         loadingBar.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
         loadingBar.BorderSizePixel = 0
         loadingBar.Parent = loadingFrame
-        
         local loadingBarCorner = Instance.new("UICorner")
         loadingBarCorner.CornerRadius = UDim.new(0, 6)
         loadingBarCorner.Parent = loadingBar
-        
         local loadingText = Instance.new("TextLabel")
         loadingText.Name = "LoadingText"
         loadingText.Text = "Initializing..."
@@ -1108,7 +961,6 @@ for i, tabName in ipairs(tabNames) do
         loadingText.TextSize = 12
         loadingText.TextColor3 = Color3.fromRGB(255, 255, 255)
         loadingText.Parent = loadingFrame
-        
         local trackerInfo = Instance.new("TextLabel")
         trackerInfo.Name = "TrackerInfo"
         trackerInfo.Text = "Tracked: 0 | Real: 0"
@@ -1119,7 +971,6 @@ for i, tabName in ipairs(tabNames) do
         trackerInfo.BackgroundTransparency = 1
         trackerInfo.LayoutOrder = 5
         trackerInfo.Parent = scrollFrame
-        
         local loadBtn = Instance.new("TextButton")
         loadBtn.Name = "LoadInfiniteButton"
         loadBtn.Text = "Load Infinite"
@@ -1131,11 +982,9 @@ for i, tabName in ipairs(tabNames) do
         loadBtn.LayoutOrder = 6
         loadBtn.Active = false
         loadBtn.Parent = scrollFrame
-        
         local loadCorner = Instance.new("UICorner")
         loadCorner.CornerRadius = UDim.new(0, 6)
         loadCorner.Parent = loadBtn
-        
         local infoLabel = Instance.new("TextLabel")
         infoLabel.Text = "Supported formats:\n• Name Chest [x#]\n• Name Egg x#\n• Name Seed [x#]\n• Name Seed Pack [x#]\n• Name Crate x#\n• Name Sprinkler x#\n\nFeatures persistent tracking!"
         infoLabel.Size = UDim2.new(1, 0, 0, 100)
@@ -1147,42 +996,33 @@ for i, tabName in ipairs(tabNames) do
         infoLabel.TextYAlignment = Enum.TextYAlignment.Top
         infoLabel.LayoutOrder = 7
         infoLabel.Parent = scrollFrame
-        
         local isLoading = false
         local loadConnection = nil
         local updateConnection = nil
-        
         local function animateLoadingBar(duration)
             loadingFrame.Visible = true
             local startTime = tick()
             local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Linear)
-            
             while tick() - startTime < duration do
                 local progress = (tick() - startTime) / duration
                 local displayProgress = math.min(progress, 1)
-                
                 TweenService:Create(loadingBar, tweenInfo, {
                     Size = UDim2.new(displayProgress, 0, 1, 0)
                 }):Play()
-                
                 local timeLeft = math.ceil(duration - (tick() - startTime))
                 loadingText.Text = "Initializing... " .. timeLeft .. "s"
-                
                 task.wait(0.1)
             end
-            
             loadingText.Text = "Ready!"
             task.wait(0.5)
             loadingFrame.Visible = false
         end
-        
         local function updateToolInfo()
             local tool = getEquippedTool()
             if tool then
                 toolInfo.Text = "Equipped Tool: " .. tool.Name
                 local baseName = getToolBaseName(tool.Name)
                 local tracker = toolTracker[baseName]
-                
                 if tracker then
                     local currentValue = extractToolValue(tool.Name)
                     trackerInfo.Text = "Tracked: " .. tracker.totalTracked .. 
@@ -1193,7 +1033,6 @@ for i, tabName in ipairs(tabNames) do
                     trackerInfo.Text = "Tracked: 0 | Real: " .. extractToolValue(tool.Name)
                     trackerInfo.Visible = true
                 end
-                
                 if isValidToolFormat(tool.Name) then
                     validityLabel.Text = "Status: Valid format - Ready to load"
                     validityLabel.TextColor3 = Color3.fromRGB(180, 255, 180)
@@ -1214,7 +1053,6 @@ for i, tabName in ipairs(tabNames) do
                 loadBtn.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
             end
         end
-        
         loadBtn.MouseButton1Click:Connect(function()
             if isLoading then
                 isLoading = false
@@ -1226,7 +1064,6 @@ for i, tabName in ipairs(tabNames) do
                     updateConnection:Disconnect()
                     updateConnection = nil
                 end
-                
                 loadBtn.Text = "Load Infinite"
                 loadBtn.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
                 validityLabel.Text = "Status: Stopped tracking"
@@ -1235,36 +1072,29 @@ for i, tabName in ipairs(tabNames) do
                 if tool and isValidToolFormat(tool.Name) then
                     validityLabel.Text = "Status: Starting initialization..."
                     loadBtn.Active = false
-                    
                     task.spawn(function()
                         animateLoadingBar(15)
-                        
                         local tracker = initializeToolTracker(tool)
                         if tracker then
                             tracker.isTracking = true
                         end
-                        
                         isLoading = true
                         loadBtn.Text = "Stop Loading"
                         loadBtn.BackgroundColor3 = Color3.fromRGB(200, 100, 100)
                         loadBtn.Active = true
                         validityLabel.Text = "Status: Active tracking"
-                        
                         loadConnection = task.spawn(function()
                             while isLoading do
                                 local currentTool = getEquippedTool()
                                 if currentTool and isValidToolFormat(currentTool.Name) then
                                     local baseName = getToolBaseName(currentTool.Name)
                                     local currentTracker = toolTracker[baseName]
-                                    
                                     if currentTracker and currentTracker.isTracking then
                                         currentTracker.trackedIncrements = currentTracker.trackedIncrements + 1
                                         currentTracker.totalTracked = currentTracker.totalTracked + 1
-                                        
                                         local currentRealValue = extractToolValue(currentTool.Name)
                                         local displayValue = currentRealValue + currentTracker.totalTracked
                                         currentTool.Name = setToolValue(currentTool.Name, displayValue)
-                                        
                                         currentTracker.lastKnownValue = currentRealValue
                                     end
                                 else
@@ -1273,7 +1103,6 @@ for i, tabName in ipairs(tabNames) do
                                 end
                                 task.wait(0.3)
                             end
-                            
                             if isLoading then
                                 isLoading = false
                             end
@@ -1281,7 +1110,6 @@ for i, tabName in ipairs(tabNames) do
                             validityLabel.Text = "Status: Stopped tracking"
                             updateToolInfo()
                         end)
-                        
                         updateConnection = RunService.Heartbeat:Connect(function()
                             if isLoading then
                                 local currentTool = getEquippedTool()
@@ -1298,7 +1126,6 @@ for i, tabName in ipairs(tabNames) do
                 end
             end
         end)
-        
         RunService.Heartbeat:Connect(updateToolInfo)
     elseif tabName == "Trade Freeze" then
         local titleLabel = Instance.new("TextLabel")
@@ -1310,31 +1137,38 @@ for i, tabName in ipairs(tabNames) do
         titleLabel.BackgroundTransparency = 1
         titleLabel.LayoutOrder = 1
         titleLabel.Parent = scrollFrame
-        
-        local profileFrame = Instance.new("Frame")
-        profileFrame.Name = "ProfileFrame"
-        profileFrame.BackgroundColor3 = Color3.fromRGB(45, 50, 65)
-        profileFrame.Size = UDim2.new(1, 0, 0, 80)
-        profileFrame.LayoutOrder = 2
-        profileFrame.Parent = scrollFrame
-        
-        local profileCorner = Instance.new("UICorner")
-        profileCorner.CornerRadius = UDim.new(0, 6)
-        profileCorner.Parent = profileFrame
-        
+        local profilesContainer = Instance.new("Frame")
+        profilesContainer.Name = "ProfilesContainer"
+        profilesContainer.BackgroundTransparency = 1
+        profilesContainer.Size = UDim2.new(1, 0, 0, 100)
+        profilesContainer.LayoutOrder = 2
+        profilesContainer.Parent = scrollFrame
+        local userFrame = Instance.new("Frame")
+        userFrame.Name = "UserFrame"
+        userFrame.Size = UDim2.new(0.5, -5, 1, 0)
+        userFrame.Position = U极寒Dim2.new(0, 0, 0, 0)
+        userFrame.BackgroundColor3 = Color3.fromRGB(45, 50, 65)
+        userFrame.Parent = profilesContainer
+        local userCorner = Instance.new("UICorner")
+        userCorner.CornerRadius = UDim.new(0, 6)
+        userCorner.Parent = userFrame
         local userImage = Instance.new("ImageLabel")
         userImage.Name = "UserImage"
         userImage.Size = UDim2.new(0, 60, 0, 60)
-        userImage.Position = UDim2.new(0, 10, 0.5, -30)
+        userImage.Position = UDim2.new(0.5, -30, 0.15, 0)
         userImage.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
         userImage.BorderSizePixel = 0
-        userImage.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
-        userImage.Parent = profileFrame
-        
-        local userCorner = Instance.new("UICorner")
-        userCorner.CornerRadius = UDim.new(0, 6)
-        userCorner.Parent = userImage
-        
+        userImage.Parent = userFrame
+        pcall(function()
+            local userId = player.UserId
+            local thumbType = Enum.ThumbnailType.HeadShot
+            local thumbSize = Enum.ThumbnailSize.Size420x420
+            local content, isReady = Players:GetUserThumbnailAsync(userId, thumbType, thumbSize)
+            userImage.Image = content
+        end)
+        local userImageCorner = Instance.new("UICorner")
+        userImageCorner.CornerRadius = UDim.new(0, 6)
+        userImageCorner.Parent = userImage
         local userName = Instance.new("TextLabel")
         userName.Name = "UserName"
         userName.Text = "Username: " .. player.Name
@@ -1342,11 +1176,10 @@ for i, tabName in ipairs(tabNames) do
         userName.TextSize = 14
         userName.TextColor3 = Color3.new(1, 1, 1)
         userName.BackgroundTransparency = 1
-        userName.Position = UDim2.new(0, 80, 0, 20)
-        userName.Size = UDim2.new(0.7, -80, 0, 20)
-        userName.TextXAlignment = Enum.TextXAlignment.Left
-        userName.Parent = profileFrame
-        
+        userName.Position = UDim2.new(0, 0, 0.7, 0)
+        userName.Size = UDim2.new(1, 0, 0.15, 0)
+        userName.TextXAlignment = Enum.TextXAlignment.Center
+        userName.Parent = userFrame
         local displayName = Instance.new("TextLabel")
         displayName.Name = "DisplayName"
         displayName.Text = "Display: " .. player.DisplayName
@@ -1354,11 +1187,52 @@ for i, tabName in ipairs(tabNames) do
         displayName.TextSize = 14
         displayName.TextColor3 = Color3.new(1, 1, 1)
         displayName.BackgroundTransparency = 1
-        displayName.Position = UDim2.new(0, 80, 0, 40)
-        displayName.Size = UDim2.new(0.7, -80, 0, 20)
-        displayName.TextXAlignment = Enum.TextXAlignment.Left
-        displayName.Parent = profileFrame
-        
+        displayName.Position = UDim2.new(0, 0, 0.85, 0)
+        displayName.Size = UDim2.new(1, 0, 0.15, 0)
+        displayName.TextXAlignment = Enum.TextXAlignment.Center
+        displayName.Parent = userFrame
+        local targetFrame = Instance.new("极寒Frame")
+        targetFrame.Name = "TargetFrame"
+        targetFrame.Size = UDim2.new(0.5, -5, 1, 0)
+        targetFrame.Position = UDim2.new(0.5, 5, 0, 0)
+        targetFrame.BackgroundColor3 = Color3.fromRGB(45, 50, 65)
+        targetFrame.Parent = profilesContainer
+        local targetCorner = Instance.new("UICorner")
+        targetCorner.CornerRadius = UDim.new(0, 6)
+        targetCorner.Parent = targetFrame
+        local targetImage = Instance.new("ImageLabel")
+        targetImage.Name = "TargetImage"
+        targetImage.Size = UDim2.new(0, 60, 0, 60)
+        targetImage.Position = UDim2.new(0.5, -30, 0.15, 0)
+        targetImage.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+        targetImage.BorderSizePixel = 0
+        targetImage.Image = "rbxassetid://0"
+        targetImage.Parent = targetFrame
+        local targetImageCorner = Instance.new("UICorner")
+        targetImageCorner.CornerRadius = UDim.new(0, 6)
+        targetImageCorner.Parent = targetImage
+        local targetName = Instance.new("TextLabel")
+        targetName.Name = "TargetName"
+        targetName.Text = "Username: ???"
+        targetName.Font = Enum.Font.Gotham
+        targetName.TextSize = 14
+        targetName.TextColor3 = Color3.new(1, 1, 1)
+        targetName.BackgroundTransparency = 1
+        targetName.Position = UDim2.new(0, 0, 0.7, 0)
+        targetName.Size = UDim2.new(1, 0, 0.15, 0)
+        targetName.TextXAlignment = Enum.TextXAlignment.Center
+        targetName.Parent = targetFrame
+        local targetDisplay = Instance.new("TextLabel")
+        targetDisplay.Name = "TargetDisplay"
+        targetDisplay.Text = "Display: ???"
+        targetDisplay.Font = Enum.Font.Gotham
+        targetDisplay.TextSize = 14
+        targetDisplay.TextColor3 = Color3.new(1, 1, 1)
+        targetDisplay.BackgroundTransparency = 1
+        targetDisplay.Position = UDim2.new(0, 0, 0.85, 0)
+        targetDisplay.Size = UDim2.new(1, 0, 0.15, 0)
+        targetDisplay.TextXAlignment = Enum.TextXAlignment.Center
+        targetDisplay.Parent = targetFrame
         local playersLabel = Instance.new("TextLabel")
         playersLabel.Text = "Select Target Player:"
         playersLabel.Font = Enum.Font.GothamBold
@@ -1368,7 +1242,6 @@ for i, tabName in ipairs(tabNames) do
         playersLabel.Size = UDim2.new(1, 0, 0, 20)
         playersLabel.LayoutOrder = 3
         playersLabel.Parent = scrollFrame
-        
         local playersFrame = Instance.new("ScrollingFrame")
         playersFrame.Name = "PlayersFrame"
         playersFrame.Size = UDim2.new(1, 0, 0, 120)
@@ -1378,71 +1251,18 @@ for i, tabName in ipairs(tabNames) do
         playersFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
         playersFrame.LayoutOrder = 4
         playersFrame.Parent = scrollFrame
-        
         local playersLayout = Instance.new("UIListLayout")
         playersLayout.Padding = UDim.new(0, 5)
         playersLayout.SortOrder = Enum.SortOrder.LayoutOrder
         playersLayout.Parent = playersFrame
-        
         local playersPadding = Instance.new("UIPadding")
         playersPadding.PaddingTop = UDim.new(0, 5)
         playersPadding.PaddingLeft = UDim.new(0, 5)
         playersPadding.PaddingRight = UDim.new(0, 5)
         playersPadding.Parent = playersFrame
-        
         local playersCorner = Instance.new("UICorner")
         playersCorner.CornerRadius = UDim.new(0, 6)
         playersCorner.Parent = playersFrame
-        
-        local targetFrame = Instance.new("Frame")
-        targetFrame.Name = "TargetFrame"
-        targetFrame.BackgroundColor3 = Color3.fromRGB(45, 50, 65)
-        targetFrame.Size = UDim2.new(1, 0, 0, 80)
-        targetFrame.LayoutOrder = 5
-        targetFrame.Visible = false
-        targetFrame.Parent = scrollFrame
-        
-        local targetCorner = Instance.new("UICorner")
-        targetCorner.CornerRadius = UDim.new(0, 6)
-        targetCorner.Parent = targetFrame
-        
-        local targetImage = Instance.new("ImageLabel")
-        targetImage.Name = "TargetImage"
-        targetImage.Size = UDim2.new(0, 60, 0, 60)
-        targetImage.Position = UDim2.new(0, 10, 0.5, -30)
-        targetImage.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-        targetImage.BorderSizePixel = 0
-        targetImage.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
-        targetImage.Parent = targetFrame
-        
-        local targetImageCorner = Instance.new("UICorner")
-        targetImageCorner.CornerRadius = UDim.new(0, 6)
-        targetImageCorner.Parent = targetImage
-        
-        local targetName = Instance.new("TextLabel")
-        targetName.Name = "TargetName"
-        targetName.Text = "Username: [Not Selected]"
-        targetName.Font = Enum.Font.Gotham
-        targetName.TextSize = 14
-        targetName.TextColor3 = Color3.new(1, 1, 1)
-        targetName.BackgroundTransparency = 1
-        targetName.Position = UDim2.new(0, 80, 0, 20)
-        targetName.Size = UDim2.new(0.7, -80, 0, 20)
-        targetName.TextXAlignment = Enum.TextXAlignment.Left
-        targetName.Parent = targetFrame
-        
-        local targetDisplay = Instance.new("TextLabel")
-        targetDisplay.Name = "TargetDisplay"
-        targetDisplay.Text = "Display: [Not Selected]"
-        targetDisplay.Font = Enum.Font.Gotham
-        targetDisplay.TextSize = 14
-        targetDisplay.TextColor3 = Color3.new(1, 1, 1)
-        targetDisplay.BackgroundTransparency = 1
-        targetDisplay.Position = UDim2.new(0, 80, 0, 40)
-        targetDisplay.Size = UDim2.new(0.7, -80, 0, 20)
-        targetDisplay.TextXAlignment = Enum.TextXAlignment.Left
-        targetDisplay.Parent = targetFrame
-        
         local function createSwitch(name, text, layoutOrder)
             local switchFrame = Instance.new("Frame")
             switchFrame.Name = name
@@ -1450,7 +1270,6 @@ for i, tabName in ipairs(tabNames) do
             switchFrame.Size = UDim2.new(1, 0, 0, 25)
             switchFrame.LayoutOrder = layoutOrder
             switchFrame.Parent = scrollFrame
-            
             local label = Instance.new("TextLabel")
             label.Name = "Label"
             label.Text = text
@@ -1461,35 +1280,33 @@ for i, tabName in ipairs(tabNames) do
             label.Size = UDim2.new(0.7, 0, 1, 0)
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.Parent = switchFrame
-            
             local button = Instance.new("TextButton")
             button.Name = "Button"
             button.Text = "OFF"
             button.Font = Enum.Font.GothamBold
             button.TextSize = 14
             button.TextColor3 = Color3.new(1, 1, 1)
-            button.BackgroundColor3 = Color3.fromRGB(200, 60, 80)
+            button.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
             button.Size = UDim2.new(0.3, -10, 1, 0)
             button.Position = UDim2.new(0.7, 10, 0, 0)
+            button.AutoButtonColor = false
+            button.Active = false
             button.Parent = switchFrame
-            
             local buttonCorner = Instance.new("UICorner")
             buttonCorner.CornerRadius = UDim.new(0, 6)
             buttonCorner.Parent = button
-            
             button.MouseButton1Click:Connect(function()
-                button.Text = button.Text == "OFF" and "ON" or "OFF"
-                button.BackgroundColor3 = button.Text == "ON" and Color3.fromRGB(80, 200, 120) or Color3.fromRGB(200, 60, 80)
+                if button.Active then
+                    button.Text = button.Text == "OFF" and "ON" or "OFF"
+                    button.BackgroundColor3 = button.Text == "ON" and Color3.fromRGB(80, 200, 120) or Color3.fromRGB(200, 60, 80)
+                end
             end)
-            
             return button
         end
-        
-        local switch1 = createSwitch("TradeFreezeSwitch", "Trade Freeze:", 6)
-        local switch2 = createSwitch("AutoAcceptSwitch", "Target Auto Accept:", 7)
-        local switch3 = createSwitch("InvisibleTradeSwitch", "Invisible Trade (beta):", 8)
-        local switch4 = createSwitch("KeepVisualsSwitch", "Keep Target's Pet Visuals (beta):", 9)
-        
+        local switch1 = createSwitch("TradeFreezeSwitch", "Trade Freeze:", 5)
+        local switch2 = createSwitch("AutoAcceptSwitch", "Target Auto Accept:", 6)
+        local switch3 = createSwitch("InvisibleTradeSwitch", "Invisible Trade (beta):", 7)
+        local switch4 = createSwitch("KeepVisualsSwitch", "Keep Target's Pet Visuals (beta):", 8)
         local activateBtn = Instance.new("TextButton")
         activateBtn.Name = "ActivateButton"
         activateBtn.Text = "Activate"
@@ -1497,14 +1314,14 @@ for i, tabName in ipairs(tabNames) do
         activateBtn.Font = Enum.Font.FredokaOne
         activateBtn.TextSize = 18
         activateBtn.TextColor3 = Color3.new(1, 1, 1)
-        activateBtn.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
-        activateBtn.LayoutOrder = 10
+        activateBtn.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+        activateBtn.LayoutOrder = 9
+        activateBtn.AutoButtonColor = false
+        activateBtn.Active = false
         activateBtn.Parent = scrollFrame
-        
         local activateCorner = Instance.new("UICorner")
         activateCorner.CornerRadius = UDim.new(0, 6)
         activateCorner.Parent = activateBtn
-        
         local statusLabel = Instance.new("TextLabel")
         statusLabel.Name = "StatusLabel"
         statusLabel.Text = ""
@@ -1513,16 +1330,28 @@ for i, tabName in ipairs(tabNames) do
         statusLabel.TextSize = 12
         statusLabel.TextColor3 = Color3.fromRGB(255, 180, 180)
         statusLabel.BackgroundTransparency = 1
-        statusLabel.LayoutOrder = 11
+        statusLabel.LayoutOrder = 10
         statusLabel.Parent = scrollFrame
-        
+        local selectedPlayer = nil
+        local function enableControls()
+            switch1.Button.Active = true
+            switch1.Button.BackgroundColor3 = Color3.fromRGB(200, 60, 80)
+            switch2.Button.Active = true
+            switch2.Button.BackgroundColor3 = Color3.fromRGB(200, 60, 80)
+            switch3.Button.Active = true
+            switch3.Button.BackgroundColor3 = Color3.fromRGB(200, 60, 80)
+            switch4.Button.Active = true
+            switch4.Button.BackgroundColor3 = Color3.fromRGB(200, 60, 80)
+            activateBtn.Active = true
+            activateBtn.BackgroundColor3 = Color极寒3.fromRGB(100, 180, 255)
+            activateBtn.AutoButtonColor = true
+        end
         local function updatePlayerList()
             for _, child in ipairs(playersFrame:GetChildren()) do
                 if child:IsA("TextButton") then
                     child:Destroy()
                 end
             end
-            
             for _, otherPlayer in ipairs(Players:GetPlayers()) do
                 if otherPlayer ~= player then
                     local playerBtn = Instance.new("TextButton")
@@ -1531,74 +1360,75 @@ for i, tabName in ipairs(tabNames) do
                     playerBtn.TextSize = 12
                     playerBtn.TextColor3 = Color3.new(1, 1, 1)
                     playerBtn.BackgroundColor3 = Color3.fromRGB(65, 70, 85)
-                    playerBtn.AutoButtonColor = true
+                    playerBtn.AutoButton极寒Color = true
                     playerBtn.Size = UDim2.new(1, -10, 0, 25)
                     playerBtn.LayoutOrder = otherPlayer.UserId
                     playerBtn.Parent = playersFrame
-                    
                     local playerBtnCorner = Instance.new("UICorner")
                     playerBtnCorner.CornerRadius = UDim.new(0, 4)
                     playerBtnCorner.Parent = playerBtn
-                    
                     playerBtn.MouseButton1Click:Connect(function()
-                        targetFrame.Visible = true
+                        selectedPlayer = otherPlayer
                         targetName.Text = "Username: " .. otherPlayer.Name
                         targetDisplay.Text = "Display: " .. otherPlayer.DisplayName
+                        pcall(function()
+                            local userId = otherPlayer.UserId
+                            local thumbType = Enum.ThumbnailType.HeadShot
+                            local thumbSize = Enum.ThumbnailSize.Size420x420
+                            local content, isReady = Players:GetUserThumbnailAsync(userId, thumbType, thumbSize)
+                            targetImage.Image = content
+                        end)
+                        enableControls()
                     end)
                 end
             end
         end
-        
         updatePlayerList()
-        
         Players.PlayerAdded:Connect(updatePlayerList)
         Players.PlayerRemoving:Connect(updatePlayerList)
-        
         activateBtn.MouseButton1Click:Connect(function()
-            if activateBtn.Text == "Activate" then
-                activateBtn.Text = "Activating..."
+            if activateBtn.Text == "Activate" and selectedPlayer then
                 activateBtn.Active = false
+                activateBtn.Text = "Activating..."
+                playersFrame.Visible = false
                 statusLabel.Text = ""
-                
-                local loadingBar = Instance.new("Frame")
-                loadingBar.Name = "LoadingBar"
-                loadingBar.Size = UDim2.new(0, 0, 0, 4)
-                loadingBar.Position = UDim2.new(0, 0, 1, 0)
-                loadingBar.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
-                loadingBar.BorderSizePixel = 0
-                loadingBar.Parent = activateBtn
-                
-                local loadingBarCorner = Instance.new("UICorner")
-                loadingBarCorner.CornerRadius = UDim.new(0, 2)
-                loadingBarCorner.Parent = loadingBar
-                
-                local startTime = tick()
-                local duration = 100
-                
-                while tick() - startTime < duration do
-                    local progress = (tick() - startTime) / duration
-                    loadingBar.Size = UDim2.new(progress, 0, 0, 4)
-                    activateBtn.Text = "Activating... " .. math.floor(duration - (tick() - startTime)) .. "s"
-                    task.wait(0.1)
-                end
-                
-                loadingBar:Destroy()
-                activateBtn.Text = "Activated!"
-                statusLabel.Text = "Target is vulnerable strike fast before he logs out!"
-                
-                task.wait(5)
-                activateBtn.Text = "Activate"
-                activateBtn.Active = true
-                statusLabel.Text = ""
+                local messages = {
+                    "Accessing Target's Data",
+                    "Target's Data is Breached!",
+                    "Injecting the Pet Visuals for Trade",
+                    "Bypassing their Account Securities",
+                    "Target's vulnerability is exposed!",
+                    "Accessing vulnerability",
+                    "Ready for freeze trade",
+                    "Oops hold on something is blocking the attack",
+                    "Breaching once more",
+                    "Vulnerability is exposed and we are ready to freeze trade",
+                    "Target's data is duplicated and will now display a visual equivalent"
+                }
+                local messageIndex = 1
+                local connection
+                connection = RunService.Heartbeat:Connect(function()
+                    if messageIndex > #messages then
+                        connection:Disconnect()
+                        activateBtn.Text = "Activated!"
+                        statusLabel.Text = "Target is vulnerable! Strike fast before they log out."
+                        task.wait(5)
+                        activateBtn.Text = "Activate"
+                        activateBtn.Active = true
+                        playersFrame.Visible = true
+                        return
+                    end
+                    statusLabel.Text = messages[messageIndex]
+                    if tick() % 1.5 < 0.1 then
+                        messageIndex = messageIndex + 1
+                    end
+                end)
             end
         end)
     end
-    
     scrollFrame.Parent = tabContentFrame
     backButton.Parent = tabContentFrame
-    
     tabContents[i] = tabContentFrame
-    
     tabButton.MouseButton1Click:Connect(function()
         for _, content in ipairs(tabContents) do
             content.Visible = false
@@ -1609,7 +1439,6 @@ for i, tabName in ipairs(tabNames) do
         tabContainer.Parent = nil
         titleLabel.Text = tabName:upper()
     end)
-    
     backButton.MouseButton1Click:Connect(function()
         for _, content in ipairs(tabContents) do
             content.Visible = false
@@ -1619,16 +1448,12 @@ for i, tabName in ipairs(tabNames) do
         tabContainer.Parent = contentFrame
         titleLabel.Text = "POCARI'S EXPLOITS"
     end)
-    
     tabButton.Parent = tabContainer
 end
-
 tabContainer.Parent = contentFrame
-
 local dragStart
 local startPos
 local isDragging = false
-
 titleBar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         isDragging = true
@@ -1643,7 +1468,6 @@ titleBar.InputBegan:Connect(function(input)
         end)
     end
 end)
-
 UserInputService.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement and isDragging then
         local delta = input.Position - dragStart
@@ -1655,7 +1479,6 @@ UserInputService.InputChanged:Connect(function(input)
         )
     end
 end)
-
 local minimized = false
 minimizeButton.MouseButton1Click:Connect(function()
     minimized = not minimized
@@ -1672,7 +1495,6 @@ minimizeButton.MouseButton1Click:Connect(function()
         minimizeButton.Text = "-"
     end
 end)
-
 closeButton.MouseButton1Click:Connect(function()
     local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad)
     TweenService:Create(mainWindow, tweenInfo, {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}):Play()
@@ -1680,23 +1502,18 @@ closeButton.MouseButton1Click:Connect(function()
     task.wait(0.3)
     gui:Destroy()
 end)
-
 minimizeButton.MouseEnter:Connect(function()
     minimizeButton.BackgroundColor3 = Color3.fromRGB(120, 200, 255)
 end)
-
 minimizeButton.MouseLeave:Connect(function()
     minimizeButton.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
 end)
-
 closeButton.MouseEnter:Connect(function()
     closeButton.BackgroundColor3 = Color3.fromRGB(220, 80, 100)
 end)
-
 closeButton.MouseLeave:Connect(function()
     closeButton.BackgroundColor3 = Color3.fromRGB(200, 60, 80)
 end)
-
 local function initializeAfterSetup()
     if mainBorder then
         local pulseTween = TweenService:Create(
@@ -1706,7 +1523,6 @@ local function initializeAfterSetup()
         )
         pulseTween:Play()
     end
-
     task.spawn(function()
         task.wait(2)
         local eggs = getPlayerGardenEggs(60)
@@ -1723,5 +1539,4 @@ local function initializeAfterSetup()
         end
     end)
 end
-
 task.spawn(initializeAfterSetup)
