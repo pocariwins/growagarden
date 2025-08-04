@@ -485,12 +485,15 @@ local Workspace = game:GetService("Workspace")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+
 local player = Players.LocalPlayer
 if not player then
     repeat wait() until Players.LocalPlayer
     player = Players.LocalPlayer
 end
+
 local playerGui = player:WaitForChild("PlayerGui")
+
 local gui = Instance.new("ScreenGui")
 gui.Name = "PocariGUI"
 gui.ResetOnSpawn = false
@@ -498,12 +501,15 @@ gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.DisplayOrder = 10
 gui.Enabled = true
 gui.Parent = playerGui
+
+-- Global variables
 local rareChancePercentage = 0.1
 local rareMutationChancePercentage = 0.1
 local espEnabled = false
 local truePetMap = {}
 local trackedEggs = {}
 local toolTracker = {}
+
 local petTable = {
     ["Common Egg"] = { "Dog", "Bunny", "Golden Lab" },
     ["Uncommon Egg"] = { "Chicken", "Black Bunny", "Cat", "Deer" },
@@ -521,6 +527,7 @@ local petTable = {
     ["Zen Egg"] = { "Shiba Inu", "Nihonzaru", "Tanuki", "Tanchozuru", "Kappa", "Kitsune" },
     ["Gourmet Egg"] = { "Bagel Bunny", "Pancake Mole", "Sushi Bear", "Spaghetti Sloth", "French Fry Ferret" }
 }
+
 local rarePets = {
     ["Kitsune"] = "Zen Egg",
     ["T-Rex"] = "Dinosaur Egg",
@@ -535,14 +542,18 @@ local rarePets = {
     ["Polar Bear"] = "Legendary Egg",
     ["French Fry Ferret"] = "Gourmet Egg"
 }
+
 local mutations = {
     "Shiny", "Inverted", "Frozen", "Windy", "Golden", "Mega", "Tiny",
     "Tranquil", "IronSkin", "Radiant", "Rainbow", "Shocked", "Ascended"
 }
+
 local currentMutation = mutations[math.random(#mutations)]
 local mutationEspEnabled = false
 local mutationEspGui, mutationEspLabel
 local mutationHue = 0
+
+-- Utility functions
 local function getEquippedTool()
     local character = player.Character
     if not character then return nil end
@@ -553,6 +564,7 @@ local function getEquippedTool()
     end
     return nil
 end
+
 local function isValidToolFormat(toolName)
     if not toolName then return false end
     local patterns = {
@@ -570,6 +582,7 @@ local function isValidToolFormat(toolName)
     end
     return false
 end
+
 local function extractToolValue(toolName)
     if not toolName then return 0 end
     local num = string.match(toolName, "%[x(%d+)%]")
@@ -583,6 +596,7 @@ local function extractToolValue(toolName)
     end
     return 0
 end
+
 local function setToolValue(toolName, value)
     if not toolName or not value then return toolName end
     local newName = toolName
@@ -595,6 +609,7 @@ local function setToolValue(toolName, value)
     end
     return newName
 end
+
 local function getToolBaseName(toolName)
     if not toolName then return "" end
     local baseName = toolName
@@ -602,6 +617,7 @@ local function getToolBaseName(toolName)
     baseName = string.gsub(baseName, " x%d+$", "")
     return baseName
 end
+
 local function initializeToolTracker(tool)
     if not tool then return nil end
     local baseName = getToolBaseName(tool.Name)
@@ -617,6 +633,7 @@ local function initializeToolTracker(tool)
     end
     return toolTracker[baseName]
 end
+
 local function updateToolDisplay(tool, tracker)
     if not tool or not tracker then return end
     local currentRealValue = extractToolValue(tool.Name)
@@ -627,6 +644,7 @@ local function updateToolDisplay(tool, tracker)
     end
     tracker.lastKnownValue = currentRealValue
 end
+
 local function rainbowEffect(label)
     if not label or not label:IsDescendantOf(game) then return end
     spawn(function()
@@ -639,6 +657,7 @@ local function rainbowEffect(label)
         end
     end)
 end
+
 local function glitchLabelEffect(label)
     if not label then return end
     spawn(function()
@@ -655,6 +674,7 @@ local function glitchLabelEffect(label)
         end
     end)
 end
+
 local function getHatchState(eggModel)
     if not eggModel then return false end
     local hatchReady = true
@@ -667,6 +687,7 @@ local function getHatchState(eggModel)
     end
     return hatchReady
 end
+
 local function selectPetForEgg(eggName)
     local pets = petTable[eggName]
     if not pets then return "Unknown" end
@@ -679,17 +700,24 @@ local function selectPetForEgg(eggName)
     end
     return pets[math.random(1, #pets)]
 end
+
 local function applyEggESP(eggModel)
     if not eggModel then return end
     if trackedEggs[eggModel] then return end
+    
+    -- Clean up existing ESP
     local existingLabel = eggModel:FindFirstChild("PetBillboard", true)
     if existingLabel then existingLabel:Destroy() end
     local existingHighlight = eggModel:FindFirstChild("ESPHighlight")
     if existingHighlight then existingHighlight:Destroy() end
+    
     if not espEnabled then return end
+    
     local basePart = eggModel:FindFirstChildWhichIsA("BasePart")
     if not basePart then return end
+    
     local hatchReady = getHatchState(eggModel)
+    
     local billboard = Instance.new("BillboardGui")
     billboard.Name = "PetBillboard"
     billboard.Size = UDim2.new(0, 270, 0, 25)
@@ -697,6 +725,7 @@ local function applyEggESP(eggModel)
     billboard.AlwaysOnTop = true
     billboard.MaxDistance = 500
     billboard.Parent = basePart
+    
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1, 0, 1, 0)
     label.BackgroundTransparency = 1
@@ -715,6 +744,7 @@ local function applyEggESP(eggModel)
     label.TextTruncate = Enum.TextTruncate.AtEnd
     label.Font = Enum.Font.FredokaOne
     label.Parent = billboard
+    
     local highlight = Instance.new("Highlight")
     highlight.Name = "ESPHighlight"
     highlight.FillColor = Color3.fromRGB(255, 200, 0)
@@ -723,8 +753,10 @@ local function applyEggESP(eggModel)
     highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
     highlight.Adornee = eggModel
     highlight.Parent = eggModel
+    
     trackedEggs[eggModel] = {billboard, highlight}
 end
+
 local function removeEggESP(eggModel)
     if not eggModel or not trackedEggs[eggModel] then return end
     for _, obj in ipairs(trackedEggs[eggModel]) do
@@ -734,6 +766,7 @@ local function removeEggESP(eggModel)
     end
     trackedEggs[eggModel] = nil
 end
+
 local function removeAllESP()
     for eggModel, espObjects in pairs(trackedEggs) do
         for _, obj in ipairs(espObjects) do
@@ -744,33 +777,40 @@ local function removeAllESP()
     end
     trackedEggs = {}
 end
+
 local function getPlayerGardenEggs(radius)
     local eggs = {}
     local char = player.Character
     if not char then return eggs end
     local root = char:FindFirstChild("HumanoidRootPart")
     if not root then return eggs end
+    
     for _, obj in pairs(Workspace:GetDescendants()) do
         if obj:IsA("Model") and petTable[obj.Name] then
             pcall(function()
-                local dist = (obj:GetModelCFrame().Position - root.Position).Magnitude
-                if dist <= (radius or 60) then
-                    if not truePetMap[obj] then
-                        truePetMap[obj] = selectPetForEgg(obj.Name)
+                local modelCFrame = obj:GetModelCFrame()
+                if modelCFrame then
+                    local dist = (modelCFrame.Position - root.Position).Magnitude
+                    if dist <= (radius or 60) then
+                        if not truePetMap[obj] then
+                            truePetMap[obj] = selectPetForEgg(obj.Name)
+                        end
+                        table.insert(eggs, obj)
                     end
-                    table.insert(eggs, obj)
                 end
             end)
         end
     end
     return eggs
 end
+
 local function animateEggESP(eggModel, duration, finalPet)
     if not eggModel or not duration or not finalPet then return end
     local billboard = trackedEggs[eggModel] and trackedEggs[eggModel][1]
     if not billboard then return end
     local label = billboard:FindFirstChild("TextLabel")
     if not label then return end
+    
     local eggName = eggModel.Name
     local pets = petTable[eggName] or {}
     local allPets = {}
@@ -782,12 +822,14 @@ local function animateEggESP(eggModel, duration, finalPet)
             table.insert(allPets, petName)
         end
     end
+    
     local hatchReady = getHatchState(eggModel)
     local hatchString = hatchReady and "" or " (Not Ready)"
     local startTime = tick()
     local endTime = startTime + duration
     local lastUpdate = startTime
     local interval = 0.05
+    
     while tick() < endTime do
         local elapsed = tick() - startTime
         local progress = elapsed / duration
@@ -795,11 +837,14 @@ local function animateEggESP(eggModel, duration, finalPet)
         if tick() - lastUpdate >= interval then
             lastUpdate = tick()
             pcall(function()
-                label.Text = "["..eggName.."] "..allPets[math.random(1, #allPets)]..hatchString
+                if #allPets > 0 then
+                    label.Text = "["..eggName.."] "..allPets[math.random(1, #allPets)]..hatchString
+                end
             end)
         end
         wait()
     end
+    
     pcall(function()
         label.Text = "["..eggName.."] "..finalPet..hatchString
         if rarePets[finalPet] then
@@ -809,6 +854,7 @@ local function animateEggESP(eggModel, duration, finalPet)
         end
     end)
 end
+
 local function randomizeNearbyEggs()
     local eggs = getPlayerGardenEggs(60)
     for _, egg in ipairs(eggs) do
@@ -827,6 +873,7 @@ local function randomizeNearbyEggs()
     end
     return #eggs
 end
+
 local function selectMutation()
     local rareMutations = {"Rainbow", "Mega", "Ascended"}
     local normalMutations = {"Shiny", "Inverted", "Frozen", "Windy", "Golden", "Tiny", "Tranquil", "IronSkin", "Radiant", "Shocked"}
@@ -836,12 +883,14 @@ local function selectMutation()
         return normalMutations[math.random(1, #normalMutations)]
     end
 end
+
 local function animateMutationESP(duration, finalMutation)
     if not mutationEspEnabled or not mutationEspLabel or not duration or not finalMutation then return end
     local startTime = tick()
     local endTime = startTime + duration
     local lastUpdate = startTime
     local interval = 0.05
+    
     while tick() < endTime do
         local elapsed = tick() - startTime
         local progress = elapsed / duration
@@ -854,11 +903,13 @@ local function animateMutationESP(duration, finalMutation)
         end
         wait()
     end
+    
     pcall(function()
         mutationEspLabel.Text = finalMutation
         currentMutation = finalMutation
     end)
 end
+
 local function findMutationMachine()
     for _, obj in pairs(Workspace:GetDescendants()) do
         if obj:IsA("Model") and obj.Name:lower():find("mutation") then
@@ -867,12 +918,15 @@ local function findMutationMachine()
     end
     return nil
 end
+
 local function setupMutationESP()
     local machine = findMutationMachine()
     if not machine then return end
     local basePart = machine:FindFirstChildWhichIsA("BasePart")
     if not basePart then return end
+    
     if mutationEspGui then mutationEspGui:Destroy() end
+    
     mutationEspGui = Instance.new("BillboardGui")
     mutationEspGui.Name = "MutationESP"
     mutationEspGui.Adornee = basePart
@@ -881,6 +935,7 @@ local function setupMutationESP()
     mutationEspGui.AlwaysOnTop = true
     mutationEspGui.Enabled = mutationEspEnabled
     mutationEspGui.Parent = basePart
+    
     mutationEspLabel = Instance.new("TextLabel")
     mutationEspLabel.Size = UDim2.new(1, 0, 1, 0)
     mutationEspLabel.BackgroundTransparency = 1
@@ -890,12 +945,19 @@ local function setupMutationESP()
     mutationEspLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
     mutationEspLabel.Text = "???"
     mutationEspLabel.Parent = mutationEspGui
-    RunService.RenderStepped:Connect(function()
-        if mutationEspEnabled and mutationEspLabel then
+    
+    -- Safe connection with cleanup
+    local mutationConnection
+    mutationConnection = RunService.RenderStepped:Connect(function()
+        if mutationEspEnabled and mutationEspLabel and mutationEspLabel.Parent then
             mutationHue = (mutationHue + 0.01) % 1
             pcall(function()
                 mutationEspLabel.TextColor3 = Color3.fromHSV(mutationHue, 1, 1)
             end)
+        else
+            if mutationConnection then
+                mutationConnection:Disconnect()
+            end
         end
     end)
 end
