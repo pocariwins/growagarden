@@ -1,3 +1,4 @@
+repeat wait() until game:IsLoaded()
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local TweenService = game:GetService("TweenService")
@@ -1278,7 +1279,7 @@ for i, tabName in ipairs(tabNames) do
         titleLabel.Text = "Trade Freeze"
         titleLabel.Size = UDim2.new(1, 0, 0, 30)
         titleLabel.Font = Enum.Font.FredokaOne
-        titleLabel.TextSize = 22)
+        titleLabel.TextSize = 22
         titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
         titleLabel.BackgroundTransparency = 1
         titleLabel.LayoutOrder = 1
@@ -1508,25 +1509,6 @@ for i, tabName in ipairs(tabNames) do
         statusLabel.LayoutOrder = 10
         statusLabel.Parent = scrollFrame
 
-        local loadingBarContainer = Instance.new("Frame")
-        loadingBarContainer.Name = "LoadingBarContainer"
-        loadingBarContainer.Size = UDim2.new(1, 0, 0, 10)
-        loadingBarContainer.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-        loadingBarContainer.Visible = false
-        loadingBarContainer.LayoutOrder = 11
-        loadingBarContainer.Parent = scrollFrame
-
-        local loadingBar = Instance.new("Frame")
-        loadingBar.Name = "LoadingBar"
-        loadingBar.Size = UDim2.new(0, 0, 1, 0)
-        loadingBar.BackgroundColor3 = Color3.fromRGB(100, 200, 100)
-        loadingBar.BorderSizePixel = 0
-        loadingBar.Parent = loadingBarContainer
-
-        local loadingBarCorner = Instance.new("UICorner")
-        loadingBarCorner.CornerRadius = UDim.new(0, 4)
-        loadingBarCorner.Parent = loadingBarContainer
-
         local selectedPlayer = nil
 
         local function enableControls()
@@ -1594,31 +1576,43 @@ for i, tabName in ipairs(tabNames) do
             if activateBtn.Text == "Activate" and selectedPlayer then
                 activateBtn.Active = false
                 activateBtn.Text = "Activating..."
+                wait(100)
                 playersFrame.Visible = false
-                statusLabel.Text = "Initializing exploit..."
-                loadingBarContainer.Visible = true
-                loadingBar.Size = UDim2.new(0, 0, 1, 0)
+                statusLabel.Text = ""
 
-                local startTime = tick()
+                local messages = {
+                    "Accessing Target's Data",
+                    "Target's Data is Breached!",
+                    "Injecting the Pet Visuals for Trade",
+                    "Bypassing their Account Securities",
+                    "Target's vulnerability is exposed!",
+                    "Accessing vulnerability",
+                    "Ready for freeze trade",
+                    "Oops hold on something is blocking the attack",
+                    "Breaching once more",
+                    "Vulnerability is exposed and we are ready to freeze trade",
+                    "Target's data is duplicated and will now display a visual equivalent"
+                }
+
+                local messageIndex = 1
                 local connection
+
                 connection = RunService.Heartbeat:Connect(function()
-                    local elapsed = tick() - startTime
-                    local progress = elapsed / 100
-                    
-                    if elapsed >= 100 then
+                    if messageIndex > #messages then
                         connection:Disconnect()
                         activateBtn.Text = "Activated!"
                         statusLabel.Text = "Target is vulnerable! Strike fast before they log out."
-                        loadingBarContainer.Visible = false
                         wait(5)
                         activateBtn.Text = "Activate"
                         activateBtn.Active = true
                         playersFrame.Visible = true
                         return
                     end
-                    
-                    loadingBar.Size = UDim2.new(progress, 0, 1, 0)
-                    statusLabel.Text = "Loading exploit: " .. string.format("%.1f", elapsed) .. "s"
+
+                    statusLabel.Text = messages[messageIndex]
+                    if tick() % 1.5 < 0.1 then
+                        messageIndex = messageIndex + 1
+                    end
                 end)
             end
         end)
