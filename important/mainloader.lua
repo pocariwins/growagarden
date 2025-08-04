@@ -1048,265 +1048,321 @@ for i, tabName in ipairs(tabNames) do
         RunService.Heartbeat:Connect(updatePetInfo)
         
     elseif tabName == "Infinite Loader" then
-        local titleLabel = Instance.new("TextLabel")
-        titleLabel.Text = "Infinite Loader"
-        titleLabel.Size = UDim2.new(1, 0, 0, 30)
-        titleLabel.Font = Enum.Font.FredokaOne
-        titleLabel.TextSize = 22
-        titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-        titleLabel.BackgroundTransparency = 1
-        titleLabel.LayoutOrder = 1
-        titleLabel.Parent = scrollFrame
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Text = "Infinite Loader"
+    titleLabel.Size = UDim2.new(1, 0, 0, 30)
+    titleLabel.Font = Enum.Font.FredokaOne
+    titleLabel.TextSize = 22
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.LayoutOrder = 1
+    titleLabel.Parent = scrollFrame
+    
+    local toolInfo = Instance.new("TextLabel")
+    toolInfo.Name = "ToolInfo"
+    toolInfo.Text = "Equipped Tool: [None]"
+    toolInfo.Size = UDim2.new(1, 0, 0, 40)
+    toolInfo.Font = Enum.Font.FredokaOne
+    toolInfo.TextSize = 14
+    toolInfo.TextColor3 = Color3.fromRGB(200, 220, 255)
+    toolInfo.BackgroundTransparency = 1
+    toolInfo.TextWrapped = true
+    toolInfo.LayoutOrder = 2
+    toolInfo.Parent = scrollFrame
+    
+    local validityLabel = Instance.new("TextLabel")
+    validityLabel.Name = "ValidityLabel"
+    validityLabel.Text = "Status: No tool equipped"
+    validityLabel.Size = UDim2.new(1, 0, 0, 20)
+    validityLabel.Font = Enum.Font.FredokaOne
+    validityLabel.TextSize = 12
+    validityLabel.TextColor3 = Color3.fromRGB(255, 180, 180)
+    validityLabel.BackgroundTransparency = 1
+    validityLabel.LayoutOrder = 3
+    validityLabel.Parent = scrollFrame
+    
+    local loadingFrame = Instance.new("Frame")
+    loadingFrame.Name = "LoadingFrame"
+    loadingFrame.Size = UDim2.new(1, 0, 0, 30)
+    loadingFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    loadingFrame.BorderSizePixel = 0
+    loadingFrame.Visible = false
+    loadingFrame.LayoutOrder = 4
+    loadingFrame.Parent = scrollFrame
+    
+    local loadingCorner = Instance.new("UICorner")
+    loadingCorner.CornerRadius = UDim.new(0, 6)
+    loadingCorner.Parent = loadingFrame
+    
+    local loadingBar = Instance.new("Frame")
+    loadingBar.Name = "LoadingBar"
+    loadingBar.Size = UDim2.new(0, 0, 1, 0)
+    loadingBar.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
+    loadingBar.BorderSizePixel = 0
+    loadingBar.Parent = loadingFrame
+    
+    local loadingBarCorner = Instance.new("UICorner")
+    loadingBarCorner.CornerRadius = UDim.new(0, 6)
+    loadingBarCorner.Parent = loadingBar
+    
+    local loadingText = Instance.new("TextLabel")
+    loadingText.Name = "LoadingText"
+    loadingText.Text = "Initializing..."
+    loadingText.Size = UDim2.new(1, 0, 1, 0)
+    loadingText.BackgroundTransparency = 1
+    loadingText.Font = Enum.Font.FredokaOne
+    loadingText.TextSize = 12
+    loadingText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    loadingText.Parent = loadingFrame
+    
+    local trackerInfo = Instance.new("TextLabel")
+    trackerInfo.Name = "TrackerInfo"
+    trackerInfo.Text = "Visual: 0 | Real: 0 | Added: 0"
+    trackerInfo.Size = UDim2.new(1, 0, 0, 20)
+    trackerInfo.Font = Enum.Font.FredokaOne
+    trackerInfo.TextSize = 12
+    trackerInfo.TextColor3 = Color3.fromRGB(180, 255, 180)
+    trackerInfo.BackgroundTransparency = 1
+    trackerInfo.LayoutOrder = 5
+    trackerInfo.Parent = scrollFrame
+    
+    local loadBtn = Instance.new("TextButton")
+    loadBtn.Name = "LoadInfiniteButton"
+    loadBtn.Text = "Load Infinite"
+    loadBtn.Size = UDim2.new(1, 0, 0, 40)
+    loadBtn.Font = Enum.Font.FredokaOne
+    loadBtn.TextSize = 18
+    loadBtn.TextColor3 = Color3.new(1, 1, 1)
+    loadBtn.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
+    loadBtn.LayoutOrder = 6
+    loadBtn.Active = false
+    loadBtn.Parent = scrollFrame
+    
+    local loadCorner = Instance.new("UICorner")
+    loadCorner.CornerRadius = UDim.new(0, 6)
+    loadCorner.Parent = loadBtn
+    
+    local infoLabel = Instance.new("TextLabel")
+    infoLabel.Text = "Supported formats:\n• Name Chest [x#]\n• Name Egg x#\n• Name Seed [x#]\n• Name Seed Pack [X#]\n• Name Crate x#\n• Name Sprinkler x#\n\nPersistent visual tracking!\nUsage is automatically detected."
+    infoLabel.Size = UDim2.new(1, 0, 0, 100)
+    infoLabel.Font = Enum.Font.Gotham
+    infoLabel.TextSize = 11
+    infoLabel.TextColor3 = Color3.fromRGB(180, 180, 200)
+    infoLabel.TextWrapped = true
+    infoLabel.BackgroundTransparency = 1
+    infoLabel.TextYAlignment = Enum.TextYAlignment.Top
+    infoLabel.LayoutOrder = 7
+    infoLabel.Parent = scrollFrame
+    
+    local isLoading = false
+    local loadConnection = nil
+    local updateConnection = nil
+    
+    -- Enhanced tracker functions for persistent visual values
+    local function initializeToolTracker(tool)
+        if not tool then return nil end
+        local baseName = getToolBaseName(tool.Name)
+        local currentValue = extractToolValue(tool.Name)
         
-        local toolInfo = Instance.new("TextLabel")
-        toolInfo.Name = "ToolInfo"
-        toolInfo.Text = "Equipped Tool: [None]"
-        toolInfo.Size = UDim2.new(1, 0, 0, 40)
-        toolInfo.Font = Enum.Font.FredokaOne
-        toolInfo.TextSize = 14
-        toolInfo.TextColor3 = Color3.fromRGB(200, 220, 255)
-        toolInfo.BackgroundTransparency = 1
-        toolInfo.TextWrapped = true
-        toolInfo.LayoutOrder = 2
-        toolInfo.Parent = scrollFrame
-        
-        local validityLabel = Instance.new("TextLabel")
-        validityLabel.Name = "ValidityLabel"
-        validityLabel.Text = "Status: No tool equipped"
-        validityLabel.Size = UDim2.new(1, 0, 0, 20)
-        validityLabel.Font = Enum.Font.FredokaOne
-        validityLabel.TextSize = 12
-        validityLabel.TextColor3 = Color3.fromRGB(255, 180, 180)
-        validityLabel.BackgroundTransparency = 1
-        validityLabel.LayoutOrder = 3
-        validityLabel.Parent = scrollFrame
-        
-        local loadingFrame = Instance.new("Frame")
-        loadingFrame.Name = "LoadingFrame"
-        loadingFrame.Size = UDim2.new(1, 0, 0, 30)
-        loadingFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-        loadingFrame.BorderSizePixel = 0
-        loadingFrame.Visible = false
-        loadingFrame.LayoutOrder = 4
-        loadingFrame.Parent = scrollFrame
-        
-        local loadingCorner = Instance.new("UICorner")
-        loadingCorner.CornerRadius = UDim.new(0, 6)
-        loadingCorner.Parent = loadingFrame
-        
-        local loadingBar = Instance.new("Frame")
-        loadingBar.Name = "LoadingBar"
-        loadingBar.Size = UDim2.new(0, 0, 1, 0)
-        loadingBar.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
-        loadingBar.BorderSizePixel = 0
-        loadingBar.Parent = loadingFrame
-        
-        local loadingBarCorner = Instance.new("UICorner")
-        loadingBarCorner.CornerRadius = UDim.new(0, 6)
-        loadingBarCorner.Parent = loadingBar
-        
-        local loadingText = Instance.new("TextLabel")
-        loadingText.Name = "LoadingText"
-        loadingText.Text = "Initializing..."
-        loadingText.Size = UDim2.new(1, 0, 1, 0)
-        loadingText.BackgroundTransparency = 1
-        loadingText.Font = Enum.Font.FredokaOne
-        loadingText.TextSize = 12
-        loadingText.TextColor3 = Color3.fromRGB(255, 255, 255)
-        loadingText.Parent = loadingFrame
-        
-        local trackerInfo = Instance.new("TextLabel")
-        trackerInfo.Name = "TrackerInfo"
-        trackerInfo.Text = "Tracked: 0 | Real: 0"
-        trackerInfo.Size = UDim2.new(1, 0, 0, 20)
-        trackerInfo.Font = Enum.Font.FredokaOne
-        trackerInfo.TextSize = 12
-        trackerInfo.TextColor3 = Color3.fromRGB(180, 255, 180)
-        trackerInfo.BackgroundTransparency = 1
-        trackerInfo.LayoutOrder = 5
-        trackerInfo.Parent = scrollFrame
-        
-        local loadBtn = Instance.new("TextButton")
-        loadBtn.Name = "LoadInfiniteButton"
-        loadBtn.Text = "Load Infinite"
-        loadBtn.Size = UDim2.new(1, 0, 0, 40)
-        loadBtn.Font = Enum.Font.FredokaOne
-        loadBtn.TextSize = 18
-        loadBtn.TextColor3 = Color3.new(1, 1, 1)
-        loadBtn.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
-        loadBtn.LayoutOrder = 6
-        loadBtn.Active = false
-        loadBtn.Parent = scrollFrame
-        
-        local loadCorner = Instance.new("UICorner")
-        loadCorner.CornerRadius = UDim.new(0, 6)
-        loadCorner.Parent = loadBtn
-        
-        local infoLabel = Instance.new("TextLabel")
-        infoLabel.Text = "Supported formats:\n• Name Chest [x#]\n• Name Egg x#\n• Name Seed [x#]\n• Name Seed Pack [X#]\n• Name Crate x#\n• Name Sprinkler x#\n\nFeatures persistent tracking!"
-        infoLabel.Size = UDim2.new(1, 0, 0, 100)
-        infoLabel.Font = Enum.Font.Gotham
-        infoLabel.TextSize = 11
-        infoLabel.TextColor3 = Color3.fromRGB(180, 180, 200)
-        infoLabel.TextWrapped = true
-        infoLabel.BackgroundTransparency = 1
-        infoLabel.TextYAlignment = Enum.TextYAlignment.Top
-        infoLabel.LayoutOrder = 7
-        infoLabel.Parent = scrollFrame
-        
-        local isLoading = false
-        local loadConnection = nil
-        local updateConnection = nil
-        
-        local function animateLoadingBar(duration)
-            loadingFrame.Visible = true
-            local startTime = tick()
-            local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Linear)
-            
-            while tick() - startTime < duration do
-                local progress = (tick() - startTime) / duration
-                local displayProgress = math.min(progress, 1)
-                
-                TweenService:Create(loadingBar, tweenInfo, {
-                    Size = UDim2.new(displayProgress, 0, 1, 0)
-                }):Play()
-                
-                local timeLeft = math.ceil(duration - (tick() - startTime))
-                loadingText.Text = "Initializing... " .. timeLeft .. "s"
-                
-                task.wait(0.1)
+        if not toolTracker[baseName] then
+            toolTracker[baseName] = {
+                initialValue = currentValue,
+                lastKnownValue = currentValue,
+                visualValue = currentValue, -- This is what the user sees
+                addedValue = 0, -- How much we've added virtually
+                isTracking = false,
+                hasBeenModified = false
+            }
+        else
+            -- Update the real value but keep visual persistence
+            local tracker = toolTracker[baseName]
+            if tracker.hasBeenModified then
+                -- Calculate how much was used based on real value change
+                local realValueDifference = currentValue - tracker.lastKnownValue
+                if realValueDifference < 0 then
+                    -- Tool was used, adjust visual value accordingly
+                    tracker.visualValue = tracker.visualValue + realValueDifference
+                    -- Ensure visual value doesn't go below real value
+                    if tracker.visualValue < currentValue then
+                        tracker.visualValue = currentValue
+                    end
+                end
             end
-            
-            loadingText.Text = "Ready!"
-            task.wait(0.5)
-            loadingFrame.Visible = false
+            tracker.lastKnownValue = currentValue
         end
         
-        local function updateToolInfo()
-            local tool = getEquippedTool()
-            if tool then
-                toolInfo.Text = "Equipped Tool: " .. tool.Name
-                local baseName = getToolBaseName(tool.Name)
-                local tracker = toolTracker[baseName]
+        return toolTracker[baseName]
+    end
+    
+    local function updateToolDisplay(tool, tracker)
+        if not tool or not tracker then return end
+        
+        local currentRealValue = extractToolValue(tool.Name)
+        local baseName = getToolBaseName(tool.Name)
+        
+        if tracker.isTracking then
+            -- Check if the real value decreased (tool was used)
+            if currentRealValue < tracker.lastKnownValue then
+                local usedAmount = tracker.lastKnownValue - currentRealValue
+                tracker.visualValue = tracker.visualValue - usedAmount
                 
-                if tracker then
-                    local currentValue = extractToolValue(tool.Name)
-                    trackerInfo.Text = "Tracked: " .. tracker.totalTracked .. 
-                                     " | Real: " .. currentValue .. 
-                                     " | Display: " .. (currentValue + tracker.totalTracked)
-                    trackerInfo.Visible = true
+                -- Ensure visual value doesn't go below the real value
+                if tracker.visualValue < currentRealValue then 
+                    tracker.visualValue = currentRealValue
+                    tracker.addedValue = 0
                 else
-                    trackerInfo.Text = "Tracked: 0 | Real: " .. extractToolValue(tool.Name)
-                    trackerInfo.Visible = true
+                    tracker.addedValue = tracker.visualValue - currentRealValue
+                end
+            end
+            
+            -- Update the tool's displayed name with the visual value
+            tool.Name = setToolValue(tool.Name, tracker.visualValue)
+            tracker.hasBeenModified = true
+        end
+        
+        tracker.lastKnownValue = currentRealValue
+    end
+    
+    local function animateLoadingBar(duration)
+        loadingFrame.Visible = true
+        local startTime = tick()
+        local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Linear)
+        
+        while tick() - startTime < duration do
+            local progress = (tick() - startTime) / duration
+            local displayProgress = math.min(progress, 1)
+            
+            TweenService:Create(loadingBar, tweenInfo, {
+                Size = UDim2.new(displayProgress, 0, 1, 0)
+            }):Play()
+            
+            local timeLeft = math.ceil(duration - (tick() - startTime))
+            loadingText.Text = "Initializing... " .. timeLeft .. "s"
+            
+            task.wait(0.1)
+        end
+        
+        loadingText.Text = "Ready!"
+        task.wait(0.5)
+        loadingFrame.Visible = false
+    end
+    
+    local function updateToolInfo()
+        local tool = getEquippedTool()
+        if tool then
+            toolInfo.Text = "Equipped Tool: " .. tool.Name
+            local baseName = getToolBaseName(tool.Name)
+            local tracker = toolTracker[baseName]
+            
+            if tracker then
+                local currentValue = extractToolValue(tool.Name)
+                -- For display purposes, show the actual current values
+                local realValue = tracker.lastKnownValue
+                if not tracker.hasBeenModified then
+                    realValue = currentValue
                 end
                 
-                if isValidToolFormat(tool.Name) then
-                    validityLabel.Text = "Status: Valid format - Ready to load"
-                    validityLabel.TextColor3 = Color3.fromRGB(180, 255, 180)
-                    loadBtn.Active = not isLoading
-                    loadBtn.BackgroundColor3 = isLoading and Color3.fromRGB(150, 150, 150) or Color3.fromRGB(100, 180, 255)
-                else
-                    validityLabel.Text = "Status: Invalid format - Not supported"
-                    validityLabel.TextColor3 = Color3.fromRGB(255, 180, 180)
-                    loadBtn.Active = false
-                    loadBtn.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
-                end
+                trackerInfo.Text = "Visual: " .. tracker.visualValue .. 
+                                 " | Real: " .. realValue .. 
+                                 " | Added: " .. tracker.addedValue
+                trackerInfo.Visible = true
             else
-                toolInfo.Text = "Equipped Tool: [None]"
-                validityLabel.Text = "Status: No tool equipped"
+                trackerInfo.Text = "Visual: " .. extractToolValue(tool.Name) .. 
+                                 " | Real: " .. extractToolValue(tool.Name) .. 
+                                 " | Added: 0"
+                trackerInfo.Visible = true
+            end
+            
+            if isValidToolFormat(tool.Name) then
+                validityLabel.Text = "Status: Valid format - Ready to load"
+                validityLabel.TextColor3 = Color3.fromRGB(180, 255, 180)
+                loadBtn.Active = not isLoading
+                loadBtn.BackgroundColor3 = isLoading and Color3.fromRGB(150, 150, 150) or Color3.fromRGB(100, 180, 255)
+            else
+                validityLabel.Text = "Status: Invalid format - Not supported"
                 validityLabel.TextColor3 = Color3.fromRGB(255, 180, 180)
-                trackerInfo.Visible = false
                 loadBtn.Active = false
                 loadBtn.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
             end
+        else
+            toolInfo.Text = "Equipped Tool: [None]"
+            validityLabel.Text = "Status: No tool equipped"
+            validityLabel.TextColor3 = Color3.fromRGB(255, 180, 180)
+            trackerInfo.Visible = false
+            loadBtn.Active = false
+            loadBtn.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
         end
-        
-        loadBtn.MouseButton1Click:Connect(function()
-            if isLoading then
-                isLoading = false
-                if loadConnection then
-                    loadConnection:Disconnect()
-                    loadConnection = nil
-                end
-                if updateConnection then
-                    updateConnection:Disconnect()
-                    updateConnection = nil
-                end
-                
-                loadBtn.Text = "Load Infinite"
-                loadBtn.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
-                validityLabel.Text = "Status: Stopped tracking"
-            else
-                local tool = getEquippedTool()
-                if tool and isValidToolFormat(tool.Name) then
-                    validityLabel.Text = "Status: Starting initialization..."
-                    loadBtn.Active = false
-                    
-                    task.spawn(function()
-                        animateLoadingBar(15)
-                        
-                        local tracker = initializeToolTracker(tool)
-                        if tracker then
-                            tracker.isTracking = true
-                        end
-                        
-                        isLoading = true
-                        loadBtn.Text = "Stop Loading"
-                        loadBtn.BackgroundColor3 = Color3.fromRGB(200, 100, 100)
-                        loadBtn.Active = true
-                        validityLabel.Text = "Status: Active tracking"
-                        
-                        loadConnection = task.spawn(function()
-                            while isLoading do
-                                local currentTool = getEquippedTool()
-                                if currentTool and isValidToolFormat(currentTool.Name) then
-                                    local baseName = getToolBaseName(currentTool.Name)
-                                    local currentTracker = toolTracker[baseName]
-                                    
-                                    if currentTracker and currentTracker.isTracking then
-                                        currentTracker.trackedIncrements = currentTracker.trackedIncrements + 1
-                                        currentTracker.totalTracked = currentTracker.totalTracked + 1
-                                        
-                                        local currentRealValue = extractToolValue(currentTool.Name)
-                                        local displayValue = currentRealValue + currentTracker.totalTracked
-                                        currentTool.Name = setToolValue(currentTool.Name, displayValue)
-                                        
-                                        currentTracker.lastKnownValue = currentRealValue
-                                    end
-                                else
-                                    isLoading = false
-                                    break
-                                end
-                                task.wait(0.3)
-                            end
-                            
-                            if isLoading then
-                                isLoading = false
-                            end
-                            loadBtn.Text = "Load Infinite"
-                            validityLabel.Text = "Status: Stopped tracking"
-                            updateToolInfo()
-                        end)
-                        
-                        updateConnection = RunService.Heartbeat:Connect(function()
-                            if isLoading then
-                                local currentTool = getEquippedTool()
-                                if currentTool then
-                                    local baseName = getToolBaseName(currentTool.Name)
-                                    local currentTracker = toolTracker[baseName]
-                                    if currentTracker then
-                                        updateToolDisplay(currentTool, currentTracker)
-                                    end
-                                end
-                            end
-                        end)
-                    end)
-                end
-            end
-        end)
-        
-        RunService.Heartbeat:Connect(updateToolInfo)
     end
+    
+    loadBtn.MouseButton1Click:Connect(function()
+        if isLoading then
+            -- Stop loading
+            isLoading = false
+            if loadConnection then
+                loadConnection:Disconnect()
+                loadConnection = nil
+            end
+            if updateConnection then
+                updateConnection:Disconnect()
+                updateConnection = nil
+            end
+            
+            loadBtn.Text = "Load Infinite"
+            loadBtn.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
+            validityLabel.Text = "Status: Stopped tracking"
+        else
+            -- Start loading
+            local tool = getEquippedTool()
+            if tool and isValidToolFormat(tool.Name) then
+                validityLabel.Text = "Status: Starting initialization..."
+                loadBtn.Active = false
+                
+                task.spawn(function()
+                    animateLoadingBar(3) -- Reduced from 15 to 3 seconds
+                    
+                    local tracker = initializeToolTracker(tool)
+                    if tracker then
+                        tracker.isTracking = true
+                        -- Set initial visual value higher than real value
+                        local currentReal = extractToolValue(tool.Name)
+                        tracker.visualValue = currentReal + 1000 -- Add 1000 to visual
+                        tracker.addedValue = 1000
+                        tracker.hasBeenModified = true
+                    end
+                    
+                    isLoading = true
+                    loadBtn.Text = "Stop Loading"
+                    loadBtn.BackgroundColor3 = Color3.fromRGB(200, 100, 100)
+                    loadBtn.Active = true
+                    validityLabel.Text = "Status: Active tracking - Persistent mode"
+                    
+                    -- Main tracking loop
+                    updateConnection = RunService.Heartbeat:Connect(function()
+                        if isLoading then
+                            local currentTool = getEquippedTool()
+                            if currentTool and isValidToolFormat(currentTool.Name) then
+                                local baseName = getToolBaseName(currentTool.Name)
+                                local currentTracker = toolTracker[baseName]
+                                
+                                if currentTracker and currentTracker.isTracking then
+                                    updateToolDisplay(currentTool, currentTracker)
+                                end
+                            else
+                                -- Stop if tool is no longer valid
+                                isLoading = false
+                                loadBtn.Text = "Load Infinite"
+                                loadBtn.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
+                                validityLabel.Text = "Status: Tool removed - Stopped"
+                            end
+                        end
+                    end)
+                end)
+            end
+        end
+    end)
+    
+    RunService.Heartbeat:Connect(updateToolInfo)
+end
     
     scrollFrame.Parent = tabContentFrame
     backButton.Parent = tabContentFrame
