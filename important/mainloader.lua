@@ -18,7 +18,7 @@ local gui = Instance.new("ScreenGui")
 gui.Name = "PocariGUI"
 gui.ResetOnSpawn = false
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-gui.DisplayOrder = 10
+gui.DisplayOrder = 9999
 gui.Enabled = true
 gui.Parent = playerGui
 
@@ -228,8 +228,8 @@ local function selectPetForEgg(eggName)
     return pets[math.random(1, #pets)]
 end
 
-local function applyEggESP(eggModel, petName)
-    if not eggModel or not petName then return end
+local function applyEggESP(eggModel)
+    if not eggModel then return end
     if trackedEggs[eggModel] then return end
     
     local existingLabel = eggModel:FindFirstChild("PetBillboard", true)
@@ -253,9 +253,9 @@ local function applyEggESP(eggModel, petName)
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1, 0, 1, 0)
     label.BackgroundTransparency = 1
-    label.Text = "["..eggModel.Name.."] "..petName
+    label.Text = "["..eggModel.Name.."] ???"
     if not hatchReady then
-        label.Text = "["..eggModel.Name.."] "..petName.." (Not Ready)"
+        label.Text = "["..eggModel.Name.."] ??? (Not Ready)"
         label.TextColor3 = Color3.fromRGB(160, 160, 160)
         label.TextStrokeTransparency = 0.5
     else
@@ -268,13 +268,6 @@ local function applyEggESP(eggModel, petName)
     label.TextTruncate = Enum.TextTruncate.AtEnd
     label.Font = Enum.Font.FredokaOne
     label.Parent = billboard
-
-    if rarePets[petName] then
-        rainbowEffect(label)
-    end
-    if hatchReady and not rarePets[petName] then
-        glitchLabelEffect(label)
-    end
 
     local highlight = Instance.new("Highlight")
     highlight.Name = "ESPHighlight"
@@ -389,7 +382,7 @@ local function randomizeNearbyEggs()
         truePetMap[egg] = finalPet
         if espEnabled then
             if not trackedEggs[egg] then
-                applyEggESP(egg, finalPet)
+                applyEggESP(egg)
             end
             if trackedEggs[egg] then
                 task.spawn(function()
@@ -470,7 +463,7 @@ local function setupMutationESP()
     mutationEspLabel.TextSize = 24
     mutationEspLabel.TextStrokeTransparency = 0.3
     mutationEspLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
-    mutationEspLabel.Text = currentMutation
+    mutationEspLabel.Text = "???"
     mutationEspLabel.Parent = mutationEspGui
     RunService.RenderStepped:Connect(function()
         if mutationEspEnabled and mutationEspLabel then
@@ -527,7 +520,7 @@ closeButton.Name = "CloseButton"
 closeButton.Text = "×"
 closeButton.Font = Enum.Font.GothamSemibold
 closeButton.TextSize = 22
-closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.TextColor3 = Color3.new(1, 1, 1)
 closeButton.BackgroundColor3 = Color3.fromRGB(200, 60, 80)
 closeButton.Size = UDim2.new(0, 28, 0, 28)
 closeButton.Position = UDim2.new(1, -32, 0, 2)
@@ -542,7 +535,7 @@ minimizeButton.Name = "MinimizeButton"
 minimizeButton.Text = "-"
 minimizeButton.Font = Enum.Font.GothamSemibold
 minimizeButton.TextSize = 22
-minimizeButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+minimizeButton.TextColor3 = Color3.new(0, 0, 0)
 minimizeButton.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
 minimizeButton.Size = UDim2.new(0, 28, 0, 28)
 minimizeButton.Position = UDim2.new(1, -64, 0, 2)
@@ -770,7 +763,7 @@ for i, tabName in ipairs(tabNames) do
             if espEnabled then
                 local eggs = getPlayerGardenEggs(60)
                 for _, egg in pairs(eggs) do
-                    applyEggESP(egg, truePetMap[egg])
+                    applyEggESP(egg)
                 end
             else
                 removeAllESP()
@@ -1429,7 +1422,7 @@ local function initializeAfterSetup()
                 truePetMap[egg] = selectPetForEgg(egg.Name)
             end
             if espEnabled then
-                applyEggESP(egg, truePetMap[egg])
+                applyEggESP(egg)
             end
         end
         if firstTabStatusLabel then
