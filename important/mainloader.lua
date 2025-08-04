@@ -22,8 +22,8 @@ gui.DisplayOrder = 99999
 gui.Enabled = true
 gui.Parent = playerGui
 
-local rareChancePercentage = 1
-local rareMutationChancePercentage = 15
+local rareChancePercentage = 0.1
+local rareMutationChancePercentage = 0.1
 
 local espEnabled = false
 local truePetMap = {}
