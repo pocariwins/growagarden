@@ -73,7 +73,522 @@ local mutationEspEnabled = false
 local mutationEspGui, mutationEspLabel
 local mutationHue = 0
 
+local function getEquippedTool()
+    local character = player.Character
+    if not character then return nil end
+    for _, child in pairs(character:GetChildren()) do
+        if child:IsA("Tool") then
+            return child
+        end
+    end
+    return nil
+end
+
+local function isValidToolFormat(toolName)
+    if not toolName then return false end
+    local patterns = {
+        "^.+ Chest %[x%d+%]$",
+        "^.+ Egg x%d+$",
+        "^.+ Seed %[x%d+%]$",
+        "^.+ Seed Pack %[X%d+%]$",
+        "^.+ Crate x%d+$",
+        "^.+ Sprinkler x%d+$"
+    }
+    
+    for _, pattern in ipairs(patterns) do
+        if string.match(toolName, pattern) then
+            return true
+        end
+    end
+    return false
+end
+
+local function extractToolValue(toolName)
+    if not toolName then return 0 end
+    local num = string.match(toolName, "%[x(%d+)%]")
+    if num then
+        return tonumber(num) or 0
+    else
+        num = string.match(toolName, " x(%d+)$")
+        if num then
+            return tonumber(num) or 0
+        end
+    end
+    return 0
+end
+
+local function setToolValue(toolName, value)
+    if not toolName or not value then return toolName end
+    local newName = toolName
+    
+    if string.match(toolName, "%[x%d+%]") then
+        newName = string.gsub(toolName, "%[x%d+%]", "[x" .. value .. "]")
+    else
+        if string.match(toolName, " x%d+$") then
+            newName = string.gsub(toolName, " x%d+$", " x" .. value)
+        end
+    end
+    
+    return newName
+end
+
+local function getToolBaseName(toolName)
+    if not toolName then return "" end
+    local baseName = toolName
+    baseName = string.gsub(baseName, " %[x%d+%]$", "")
+    baseName = string.gsub(baseName, " x%d+$", "")
+    return baseName
+end
+
+-- Global tracking system for visual modifications
+local visualTracker = {}
+local globalTrackingEnabled = false
+local globalTrackingConnection = nil
+
+-- Function to add/update item in visual tracker
+local function addToVisualTracker(toolName, initialValue, visualBonus)
+    local baseName = getToolBaseName(toolName)
+    visualTracker[baseName] = {
+        initialValue = initialValue,
+        currentVisualBonus = visualBonus,
+        lastRealValue = initialValue,
+        isActive = true,
+        toolName = toolName
+    }
+end
+
+-- Function to get visual value for a tool
+local function getVisualValue(toolName, realValue)
+    local baseName = getToolBaseName(toolName)
+    local tracker = visualTracker[baseName]
+    
+    if not tracker or not tracker.isActive then
+        return realValue
+    end
+    
+    -- Check if real value decreased (tool was used)
+    if realValue < tracker.lastRealValue then
+        local usedAmount = tracker.lastRealValue - realValue
+        -- Don't reduce the visual bonus, just update the base
+        tracker.lastRealValue = realValue
+    elseif realValue > tracker.lastRealValue then
+        -- Real value increased somehow, update tracking
+        tracker.lastRealValue = realValue
+    end
+    
+    -- Return real value + visual bonus
+    return realValue + tracker.currentVisualBonus
+end
+
+-- Function to update visual bonus
+local function updateVisualBonus(toolName, additionalBonus)
+    local baseName = getToolBaseName(toolName)
+    local tracker = visualTracker[baseName]
+    
+    if tracker and tracker.isActive then
+        tracker.currentVisualBonus = tracker.currentVisualBonus + additionalBonus
+    end
+end
+
+-- Global monitoring system
+local function startGlobalTracking()
+    if globalTrackingConnection then return end
+    
+    globalTrackingEnabled = true
+    globalTrackingConnection = RunService.Heartbeat:Connect(function()
+        if not globalTrackingEnabled then return end
+        
+        -- Check all tools in player's inventory/character
+        local character = player.Character
+        if not character then return end
+        
+        -- Check equipped tool
+        local equippedTool = getEquippedTool()
+        if equippedTool and isValidToolFormat(equippedTool.Name) then
+            local baseName = getToolBaseName(equippedTool.Name)
+            local tracker = visualTracker[baseName]
+            
+            if tracker and tracker.isActive then
+                local currentRealValue = extractToolValue(equippedTool.Name)
+                local visualValue = getVisualValue(equippedTool.Name, currentRealValue)
+                
+                -- Update the tool name with visual value
+                equippedTool.Name = setToolValue(equippedTool.Name, visualValue)
+            end
+        end
+        
+        -- Check backpack tools
+        local backpack = player:FindFirstChild("Backpack")
+        if backpack then
+            for _, tool in pairs(backpack:GetChildren()) do
+                if tool:IsA("Tool") and isValidToolFormat(tool.Name) then
+                    local baseName = getToolBaseName(tool.Name)
+                    local tracker = visualTracker[baseName]
+                    
+                    if tracker and tracker.isActive then
+                        local currentRealValue = extractToolValue(tool.Name)
+                        local visualValue = getVisualValue(tool.Name, currentRealValue)
+                        
+                        -- Update the tool name with visual value
+                        tool.Name = setToolValue(tool.Name, visualValue)
+                    end
+                end
+            end
+        end
+    end)
+end
+
+-- Function to stop global tracking
+local function stopGlobalTracking()
+    globalTrackingEnabled = false
+    if globalTrackingConnection then
+        globalTrackingConnection:Disconnect()
+        globalTrackingConnection = nil
+    end
+end
+
+local function initializeToolTracker(tool)
+    if not tool then return nil end
+    local baseName = getToolBaseName(tool.Name)
+    local currentValue = extractToolValue(tool.Name)
+    
+    if not toolTracker[baseName] then
+        toolTracker[baseName] = {
+            initialValue = currentValue,
+            lastKnownValue = currentValue,
+            trackedIncrements = 0,
+            totalTracked = 0,
+            isTracking = false
+        }
+    end
+    
+    return toolTracker[baseName]
+end
+
+local function updateToolDisplay(tool, tracker)
+    if not tool or not tracker then return end
+    
+    local currentRealValue = extractToolValue(tool.Name)
+    local baseName = getToolBaseName(tool.Name)
+    
+    if tracker.isTracking then
+        local displayValue = currentRealValue + tracker.totalTracked
+        tool.Name = setToolValue(tool.Name, displayValue)
+    end
+    
+    tracker.lastKnownValue = currentRealValue
+end
+
+local function rainbowEffect(label)
+    if not label or not label:IsDescendantOf(game) then return end
+    task.spawn(function()
+        local hue = 0
+        while task.wait(0.03) and label and label:IsDescendantOf(game) do
+            hue = (hue + 0.01) % 1
+            pcall(function()
+                label.TextColor3 = Color3.fromHSV(hue, 1, 1)
+            end)
+        end
+    end)
+end
+
+local function glitchLabelEffect(label)
+    if not label then return end
+    task.spawn(function()
+        local original = label.TextColor3
+        for i = 1, 2 do
+            pcall(function()
+                label.TextColor3 = Color3.new(1, 0, 0)
+            end)
+            task.wait(0.07)
+            pcall(function()
+                label.TextColor3 = original
+            end)
+            task.wait(0.07)
+        end
+    end)
+end
+
+local function getHatchState(eggModel)
+    if not eggModel then return false end
+    local hatchReady = true
+    local hatchTime = eggModel:FindFirstChild("HatchTime")
+    local readyFlag = eggModel:FindFirstChild("ReadyToHatch")
+    if hatchTime and hatchTime:IsA("NumberValue") and hatchTime.Value > 0 then
+        hatchReady = false
+    elseif readyFlag and readyFlag:IsA("BoolValue") and not readyFlag.Value then
+        hatchReady = false
+    end
+    return hatchReady
+end
+
+local function selectPetForEgg(eggName)
+    local pets = petTable[eggName]
+    if not pets then return "Unknown" end
+    if math.random(1, 100) <= rareChancePercentage then
+        for petName, requiredEgg in pairs(rarePets) do
+            if requiredEgg == eggName then
+                return petName
+            end
+        end
+    end
+    return pets[math.random(1, #pets)]
+end
+
+local function applyEggESP(eggModel, petName)
+    if not eggModel or not petName then return end
+    if trackedEggs[eggModel] then return end
+    
+    local existingLabel = eggModel:FindFirstChild("PetBillboard", true)
+    if existingLabel then existingLabel:Destroy() end
+    local existingHighlight = eggModel:FindFirstChild("ESPHighlight")
+    if existingHighlight then existingHighlight:Destroy() end
+    if not espEnabled then return end
+
+    local basePart = eggModel:FindFirstChildWhichIsA("BasePart")
+    if not basePart then return end
+
+    local hatchReady = getHatchState(eggModel)
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "PetBillboard"
+    billboard.Size = UDim2.new(0, 270, 0, 25)
+    billboard.StudsOffset = Vector3.new(0, 4.5, 0)
+    billboard.AlwaysOnTop = true
+    billboard.MaxDistance = 500
+    billboard.Parent = basePart
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = "["..eggModel.Name.."] "..petName
+    if not hatchReady then
+        label.Text = "["..eggModel.Name.."] "..petName.." (Not Ready)"
+        label.TextColor3 = Color3.fromRGB(160, 160, 160)
+        label.TextStrokeTransparency = 0.5
+    else
+        label.TextColor3 = Color3.new(1, 1, 1)
+        label.TextStrokeTransparency = 0
+    end
+    label.TextScaled = false
+    label.TextSize = 18
+    label.TextWrapped = false
+    label.TextTruncate = Enum.TextTruncate.AtEnd
+    label.Font = Enum.Font.FredokaOne
+    label.Parent = billboard
+
+    if rarePets[petName] then
+        rainbowEffect(label)
+    end
+    if hatchReady and not rarePets[petName] then
+        glitchLabelEffect(label)
+    end
+
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "ESPHighlight"
+    highlight.FillColor = Color3.fromRGB(255, 200, 0)
+    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    highlight.FillTransparency = 0.7
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Adornee = eggModel
+    highlight.Parent = eggModel
+    
+    trackedEggs[eggModel] = {billboard, highlight}
+end
+
+local function removeEggESP(eggModel)
+    if not eggModel or not trackedEggs[eggModel] then return end
+    for _, obj in ipairs(trackedEggs[eggModel]) do
+        if obj and obj.Parent then
+            obj:Destroy()
+        end
+    end
+    trackedEggs[eggModel] = nil
+end
+
+local function removeAllESP()
+    for eggModel, espObjects in pairs(trackedEggs) do
+        for _, obj in ipairs(espObjects) do
+            if obj and obj.Parent then
+                obj:Destroy()
+            end
+        end
+    end
+    trackedEggs = {}
+end
+
+local function getPlayerGardenEggs(radius)
+    local eggs = {}
+    local char = player.Character
+    if not char then return eggs end
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return eggs end
+
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj:IsA("Model") and petTable[obj.Name] then
+            pcall(function()
+                local dist = (obj:GetModelCFrame().Position - root.Position).Magnitude
+                if dist <= (radius or 60) then
+                    if not truePetMap[obj] then
+                        truePetMap[obj] = selectPetForEgg(obj.Name)
+                    end
+                    table.insert(eggs, obj)
+                end
+            end)
+        end
+    end
+    return eggs
+end
+
+local function animateEggESP(eggModel, duration, finalPet)
+    if not eggModel or not duration or not finalPet then return end
+    local billboard = trackedEggs[eggModel] and trackedEggs[eggModel][1]
+    if not billboard then return end
+    local label = billboard:FindFirstChild("TextLabel")
+    if not label then return end
+
+    local eggName = eggModel.Name
+    local pets = petTable[eggName] or {}
+    local allPets = {}
+    for _, pet in ipairs(pets) do
+        table.insert(allPets, pet)
+    end
+    for petName, eggType in pairs(rarePets) do
+        if eggType == eggName then
+            table.insert(allPets, petName)
+        end
+    end
+
+    local hatchReady = getHatchState(eggModel)
+    local hatchString = hatchReady and "" or " (Not Ready)"
+    local startTime = tick()
+    local endTime = startTime + duration
+    local lastUpdate = startTime
+    local interval = 0.05
+
+    while tick() < endTime do
+        local elapsed = tick() - startTime
+        local progress = elapsed / duration
+        interval = 0.05 + (0.5 - 0.05) * progress
+
+        if tick() - lastUpdate >= interval then
+            lastUpdate = tick()
+            pcall(function()
+                label.Text = "["..eggName.."] "..allPets[math.random(1, #allPets)]..hatchString
+            end)
+        end
+        task.wait()
+    end
+
+    pcall(function()
+        label.Text = "["..eggName.."] "..finalPet..hatchString
+        if rarePets[finalPet] then
+            rainbowEffect(label)
+        elseif hatchReady then
+            glitchLabelEffect(label)
+        end
+    end)
+end
+
+local function randomizeNearbyEggs()
+    local eggs = getPlayerGardenEggs(60)
+    for _, egg in ipairs(eggs) do
+        local finalPet = selectPetForEgg(egg.Name)
+        truePetMap[egg] = finalPet
+        if espEnabled then
+            if not trackedEggs[egg] then
+                applyEggESP(egg, finalPet)
+            end
+            if trackedEggs[egg] then
+                task.spawn(function()
+                    animateEggESP(egg, 5, finalPet)
+                end)
+            end
+        end
+    end
+    return #eggs
+end
+
+local function selectMutation()
+    local rareMutations = {"Rainbow", "Mega", "Ascended"}
+    local normalMutations = {"Shiny", "Inverted", "Frozen", "Windy", "Golden", "Tiny", "Tranquil", "IronSkin", "Radiant", "Shocked"}
+    
+    if math.random(1, 100) <= rareMutationChancePercentage then
+        return rareMutations[math.random(1, #rareMutations)]
+    else
+        return normalMutations[math.random(1, #normalMutations)]
+    end
+end
+
+local function animateMutationESP(duration, finalMutation)
+    if not mutationEspEnabled or not mutationEspLabel or not duration or not finalMutation then return end
+    
+    local startTime = tick()
+    local endTime = startTime + duration
+    local lastUpdate = startTime
+    local interval = 0.05
+
+    while tick() < endTime do
+        local elapsed = tick() - startTime
+        local progress = elapsed / duration
+        interval = 0.05 + (0.3 - 0.05) * progress
+
+        if tick() - lastUpdate >= interval then
+            lastUpdate = tick()
+            pcall(function()
+                mutationEspLabel.Text = mutations[math.random(1, #mutations)]
+            end)
+        end
+        task.wait()
+    end
+
+    pcall(function()
+        mutationEspLabel.Text = finalMutation
+        currentMutation = finalMutation
+    end)
+end
+
+local function findMutationMachine()
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj:IsA("Model") and obj.Name:lower():find("mutation") then
+            return obj
+        end
+    end
+    return nil
+end
+
 local function setupMutationESP()
+    local machine = findMutationMachine()
+    if not machine then return end
+    local basePart = machine:FindFirstChildWhichIsA("BasePart")
+    if not basePart then return end
+    if mutationEspGui then mutationEspGui:Destroy() end
+    mutationEspGui = Instance.new("BillboardGui")
+    mutationEspGui.Name = "MutationESP"
+    mutationEspGui.Adornee = basePart
+    mutationEspGui.Size = UDim2.new(0, 200, 0, 40)
+    mutationEspGui.StudsOffset = Vector3.new(0, 3, 0)
+    mutationEspGui.AlwaysOnTop = true
+    mutationEspGui.Enabled = mutationEspEnabled
+    mutationEspGui.Parent = basePart
+    mutationEspLabel = Instance.new("TextLabel")
+    mutationEspLabel.Size = UDim2.new(1, 0, 1, 0)
+    mutationEspLabel.BackgroundTransparency = 1
+    mutationEspLabel.Font = Enum.Font.FredokaOne
+    mutationEspLabel.TextSize = 24
+    mutationEspLabel.TextStrokeTransparency = 0.3
+    mutationEspLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+    mutationEspLabel.Text = currentMutation
+    mutationEspLabel.Parent = mutationEspGui
+    RunService.RenderStepped:Connect(function()
+        if mutationEspEnabled and mutationEspLabel then
+            mutationHue = (mutationHue + 0.01) % 1
+            pcall(function()
+                mutationEspLabel.TextColor3 = Color3.fromHSV(mutationHue, 1, 1)
+            end)
+        end
+    end)
+end
+
 local mainWindow = Instance.new("Frame")
 mainWindow.Name = "MainFrame"
 mainWindow.Size = UDim2.new(0, 320, 0, 240)
@@ -673,40 +1188,6 @@ for i, tabName in ipairs(tabNames) do
         validityLabel.LayoutOrder = 3
         validityLabel.Parent = scrollFrame
         
-        local loadingFrame = Instance.new("Frame")
-        loadingFrame.Name = "LoadingFrame"
-        loadingFrame.Size = UDim2.new(1, 0, 0, 30)
-        loadingFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-        loadingFrame.BorderSizePixel = 0
-        loadingFrame.Visible = false
-        loadingFrame.LayoutOrder = 4
-        loadingFrame.Parent = scrollFrame
-        
-        local loadingCorner = Instance.new("UICorner")
-        loadingCorner.CornerRadius = UDim.new(0, 6)
-        loadingCorner.Parent = loadingFrame
-        
-        local loadingBar = Instance.new("Frame")
-        loadingBar.Name = "LoadingBar"
-        loadingBar.Size = UDim2.new(0, 0, 1, 0)
-        loadingBar.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
-        loadingBar.BorderSizePixel = 0
-        loadingBar.Parent = loadingFrame
-        
-        local loadingBarCorner = Instance.new("UICorner")
-        loadingBarCorner.CornerRadius = UDim.new(0, 6)
-        loadingBarCorner.Parent = loadingBar
-        
-        local loadingText = Instance.new("TextLabel")
-        loadingText.Name = "LoadingText"
-        loadingText.Text = "Initializing..."
-        loadingText.Size = UDim2.new(1, 0, 1, 0)
-        loadingText.BackgroundTransparency = 1
-        loadingText.Font = Enum.Font.FredokaOne
-        loadingText.TextSize = 12
-        loadingText.TextColor3 = Color3.fromRGB(255, 255, 255)
-        loadingText.Parent = loadingFrame
-        
         local trackerInfo = Instance.new("TextLabel")
         trackerInfo.Name = "TrackerInfo"
         trackerInfo.Text = "Visual: 0 | Real: 0 | Bonus: 0"
@@ -715,7 +1196,7 @@ for i, tabName in ipairs(tabNames) do
         trackerInfo.TextSize = 12
         trackerInfo.TextColor3 = Color3.fromRGB(180, 255, 180)
         trackerInfo.BackgroundTransparency = 1
-        trackerInfo.LayoutOrder = 5
+        trackerInfo.LayoutOrder = 4
         trackerInfo.Parent = scrollFrame
         
         local trackedItemsList = Instance.new("TextLabel")
@@ -728,7 +1209,7 @@ for i, tabName in ipairs(tabNames) do
         trackedItemsList.BackgroundTransparency = 1
         trackedItemsList.TextWrapped = true
         trackedItemsList.TextYAlignment = Enum.TextYAlignment.Top
-        trackedItemsList.LayoutOrder = 5.5
+        trackedItemsList.LayoutOrder = 5
         trackedItemsList.Parent = scrollFrame
         
         local loadBtn = Instance.new("TextButton")
@@ -761,7 +1242,6 @@ for i, tabName in ipairs(tabNames) do
         
         local isLoading = false
         local incrementConnection = nil
-        local updateConnection = nil
         
         -- Function to update tracked items display
         local function updateTrackedItemsDisplay()
