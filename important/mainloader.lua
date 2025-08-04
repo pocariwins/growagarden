@@ -73,6 +73,125 @@ local mutationEspEnabled = false
 local mutationEspGui, mutationEspLabel
 local mutationHue = 0
 
+local function getEquippedTool()
+    local character = player.Character
+    if not character then return nil end
+    for _, child in pairs(character:GetChildren()) do
+        if child:IsA("Tool") then
+            return child
+        end
+    end
+    return nil
+end
+
+local function isValidToolFormat(toolName)
+    if not toolName then return false end
+    local patterns = {
+        "^.+ Chest %[x%d+%]$",
+        "^.+ Egg x%d+$",
+        "^.+ Seed %[x%d+%]$",
+        "^.+ Seed Pack %[X%d+%]$",
+        "^.+ Crate x%d+$",
+        "^.+ Sprinkler x%d+$"
+    }
+    
+    for _, pattern in ipairs(patterns) do
+        if string.match(toolName, pattern) then
+            return true
+        end
+    end
+    return false
+end
+
+local function extractToolValue(toolName)
+    if not toolName then return 0 end
+    local num = string.match(toolName, "%[x(%d+)%]")
+    if num then
+        return tonumber(num) or 0
+    else
+        num = string.match(toolName, " x(%d+)$")
+        if num then
+            return tonumber(num) or 0
+        end
+    end
+    return 0
+end
+
+local function setToolValue(toolName, value)
+    if not toolName or not value then return toolName end
+    local newName = toolName
+    
+    if string.match(toolName, "%[x%d+%]") then
+        newName = string.gsub(toolName, "%[x%d+%]", "[x" .. value .. "]")
+    else
+        if string.match(toolName, " x%d+$") then
+            newName = string.gsub(toolName, " x%d+$", " x" .. value)
+        end
+    end
+    
+    return newName
+end
+
+local function getToolBaseName(toolName)
+    if not toolName then return "" end
+    local baseName = toolName
+    baseName = string.gsub(baseName, " %[x%d+%]$", "")
+    baseName = string.gsub(baseName, " x%d+$", "")
+    return baseName
+end
+
+-- NOW ADD THE GLOBAL TRACKING SYSTEM AFTER THESE FUNCTIONS
+
+-- Global tracking system for visual modifications
+local visualTracker = {}
+local globalTrackingEnabled = false
+local globalTrackingConnection = nil
+
+-- Function to add/update item in visual tracker
+local function addToVisualTracker(toolName, initialValue, visualBonus)
+    local baseName = getToolBaseName(toolName)
+    visualTracker[baseName] = {
+        initialValue = initialValue,
+        currentVisualBonus = visualBonus,
+        lastRealValue = initialValue,
+        isActive = true,
+        toolName = toolName
+    }
+end
+
+-- Function to get visual value for a tool
+local function getVisualValue(toolName, realValue)
+    local baseName = getToolBaseName(toolName)
+    local tracker = visualTracker[baseName]
+    
+    if not tracker or not tracker.isActive then
+        return realValue
+    end
+    
+    -- Check if real value decreased (tool was used)
+    if realValue < tracker.lastRealValue then
+        local usedAmount = tracker.lastRealValue - realValue
+        -- Don't reduce the visual bonus, just update the base
+        tracker.lastRealValue = realValue
+    elseif realValue > tracker.lastRealValue then
+        -- Real value increased somehow, update tracking
+        tracker.lastRealValue = realValue
+    end
+    
+    -- Return real value + visual bonus
+    return realValue + tracker.currentVisualBonus
+end
+
+-- Function to update visual bonus
+local function updateVisualBonus(toolName, additionalBonus)
+    local baseName = getToolBaseName(toolName)
+    local tracker = visualTracker[baseName]
+    
+    if tracker and tracker.isActive then
+        tracker.currentVisualBonus = tracker.currentVisualBonus + additionalBonus
+    end
+end
+
 local visualTracker = {}
 local globalTrackingEnabled = false
 local globalTrackingConnection = nil
@@ -177,105 +296,6 @@ local function stopGlobalTracking()
         globalTrackingConnection:Disconnect()
         globalTrackingConnection = nil
     end
-end
-
-local function getEquippedTool()
-    local character = player.Character
-    if not character then return nil end
-    for _, child in pairs(character:GetChildren()) do
-        if child:IsA("Tool") then
-            return child
-        end
-    end
-    return nil
-end
-
-local function isValidToolFormat(toolName)
-    if not toolName then return false end
-    local patterns = {
-        "^.+ Chest %[x%d+%]$",
-        "^.+ Egg x%d+$",
-        "^.+ Seed %[x%d+%]$",
-        "^.+ Seed Pack %[X%d+%]$",
-        "^.+ Crate x%d+$",
-        "^.+ Sprinkler x%d+$"
-    }
-    
-    for _, pattern in ipairs(patterns) do
-        if string.match(toolName, pattern) then
-            return true
-        end
-    end
-    return false
-end
-
-local function extractToolValue(toolName)
-    if not toolName then return 0 end
-    local num = string.match(toolName, "%[x(%d+)%]")
-    if num then
-        return tonumber(num) or 0
-    else
-        num = string.match(toolName, " x(%d+)$")
-        if num then
-            return tonumber(num) or 0
-        end
-    end
-    return 0
-end
-
-local function setToolValue(toolName, value)
-    if not toolName or not value then return toolName end
-    local newName = toolName
-    
-    if string.match(toolName, "%[x%d+%]") then
-        newName = string.gsub(toolName, "%[x%d+%]", "[x" .. value .. "]")
-    else
-        if string.match(toolName, " x%d+$") then
-            newName = string.gsub(toolName, " x%d+$", " x" .. value)
-        end
-    end
-    
-    return newName
-end
-
-local function getToolBaseName(toolName)
-    if not toolName then return "" end
-    local baseName = toolName
-    baseName = string.gsub(baseName, " %[x%d+%]$", "")
-    baseName = string.gsub(baseName, " x%d+$", "")
-    return baseName
-end
-
-local function initializeToolTracker(tool)
-    if not tool then return nil end
-    local baseName = getToolBaseName(tool.Name)
-    local currentValue = extractToolValue(tool.Name)
-    
-    if not toolTracker[baseName] then
-        toolTracker[baseName] = {
-            initialValue = currentValue,
-            lastKnownValue = currentValue,
-            trackedIncrements = 0,
-            totalTracked = 0,
-            isTracking = false
-        }
-    end
-    
-    return toolTracker[baseName]
-end
-
-local function updateToolDisplay(tool, tracker)
-    if not tool or not tracker then return end
-    
-    local currentRealValue = extractToolValue(tool.Name)
-    local baseName = getToolBaseName(tool.Name)
-    
-    if tracker.isTracking then
-        local displayValue = currentRealValue + tracker.totalTracked
-        tool.Name = setToolValue(tool.Name, displayValue)
-    end
-    
-    tracker.lastKnownValue = currentRealValue
 end
 
 local function rainbowEffect(label)
