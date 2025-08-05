@@ -1576,7 +1576,7 @@ for i, tabName in ipairs(tabNames) do
             if activateBtn.Text == "Activate" and selectedPlayer then
                 activateBtn.Active = false
                 activateBtn.Text = "Activating..."
-                wait(10)
+                wait(100)
                 playersFrame.Visible = false
                 statusLabel.Text = ""
 
