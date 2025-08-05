@@ -2,6 +2,7 @@ local gui = Instance.new("ScreenGui")
 gui.Name = "PocariGUI"
 gui.ResetOnSpawn = false
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.DisplayOrder = 999
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
@@ -127,7 +128,7 @@ local function createNotificationGUI(hubName)
     
     local notifTitle = Instance.new("TextLabel")
     notifTitle.Name = "Title"
-    notifTitle.Text = "SCRIPT HUBS"
+    notifTitle.Text = "STATUS WARNING"
     notifTitle.Font = Enum.Font.FredokaOne
     notifTitle.TextSize = 16
     notifTitle.TextColor3 = Color3.fromRGB(200, 220, 255)
