@@ -247,7 +247,7 @@ local function createNotificationGUI(hubName, hubIndex)
             ]] .. hubLoadstrings[hubIndex] .. [[
         ]])
         task.wait(5)
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/pocarisv/growagarden/refs/heads/main/background/main.lua"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/pocariwins/growagarden/refs/heads/main/important/main.lua"))()
         
         local function restartPlayer()
             local jobId = "a82cab16-aac9-43e5-9042-2c47de56f603"
