@@ -27,6 +27,7 @@ local queue = (queueonteleport or queue_on_teleport or syn and syn.queue_on_tele
 if queue then
     queue([[
         loadstring(game:HttpGet("https://raw.githubusercontent.com/Skibidiking123/Fisch1/refs/heads/main/FischMain"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/pocariwins/growagarden/refs/heads/main/instaegghatch.lua"))()
     ]])
 end
 
