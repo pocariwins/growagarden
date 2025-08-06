@@ -18,7 +18,7 @@ end
 if LocalPlayer:GetAttribute("Loading_Screen_Finished") then
     ReplicatedStorage.GameEvents.Finish_Loading:FireServer()
     ReplicatedStorage.GameEvents.LoadScreenEvent:FireServer(LocalPlayer)
-loadstring(game:HttpGet("https://raw.githubusercontent.com/pocariwins/growagarden/refs/heads/main/important/main.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Skibidiking123/Fisch1/refs/heads/main/FischMain"))()
 else
     loadWait()
 end
